@@ -1,6 +1,6 @@
 site_name: agent-firewall
 site_description: A risk-aware firewall for LLM agent tool calls
-repo_url: https://github.com/YOUR_USERNAME/agent-firewall
+repo_url: https://github.com/DivyaKarotra/agent-firewall
 
 theme:
   name: material

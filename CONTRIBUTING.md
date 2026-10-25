@@ -11,7 +11,7 @@ Please maintain a respectful, constructive, and collaborative tone in all discus
 Clone the repository and install the development dependencies:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/agent-firewall.git
+git clone https://github.com/DivyaKarotra/agent-firewall.git
 cd agent-firewall
 
 # Create and activate a virtual environment

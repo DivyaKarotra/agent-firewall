@@ -23,7 +23,7 @@ git push -u origin main
 ## 2. Enable GitHub Actions and GitHub Pages
 
 1. **GitHub Actions (CI)**:
-   - Navigate to `https://github.com/<YOUR_USERNAME>/agent-firewall/actions`.
+   - Navigate to `https://github.com/DivyaKarotra/agent-firewall/actions`.
    - Ensure the `CI` workflow (`.github/workflows/ci.yml`) runs and passes on `main`.
 2. **GitHub Pages (Documentation)**:
    - Go to **Settings $\rightarrow$ Pages**.
@@ -32,7 +32,7 @@ git push -u origin main
      ```bash
      python -m mkdocs gh-deploy --strict
      ```
-   - Verify docs are live at `https://<YOUR_USERNAME>.github.io/agent-firewall/`.
+   - Verify docs are live at `https://DivyaKarotra.github.io/agent-firewall/`.
 
 ---
 
@@ -42,7 +42,7 @@ git push -u origin main
 1. Go to [pypi.org/manage/account/publishing/](https://pypi.org/manage/account/publishing/).
 2. Add a new pending publisher:
    - PyPI Project Name: `agent-firewall`
-   - Owner: `<YOUR_USERNAME>`
+   - Owner: `DivyaKarotra`
    - Repository name: `agent-firewall`
    - Workflow name: `release.yml`
 3. Create a GitHub release or tag:
@@ -81,7 +81,7 @@ huggingface-cli login
 huggingface-cli repo create agent-firewall-benchmark --type dataset
 
 # 4.4 Upload the dataset directory
-huggingface-cli upload <YOUR_USERNAME>/agent-firewall-benchmark hf_dataset . --repo-type dataset
+huggingface-cli upload DivyaKarotra/agent-firewall-benchmark hf_dataset . --repo-type dataset
 ```
 
 ---
@@ -90,7 +90,7 @@ huggingface-cli upload <YOUR_USERNAME>/agent-firewall-benchmark hf_dataset . --r
 
 1. **Blog Post**:
    - Copy contents from [publish/blog_post.md](publish/blog_post.md) to your personal blog, Medium, Substack, or Dev.to.
-   - Replace placeholder links (`YOUR_USERNAME`, `YOUR_BLOG_URL`) with your live URLs.
+   - Replace placeholder blog link (`YOUR_BLOG_URL`) with your live URL.
 2. **LinkedIn Announcement**:
    - Copy contents from [publish/linkedin_post.md](publish/linkedin_post.md).
    - Paste into LinkedIn and verify preview cards for the GitHub repository and blog post.

@@ -33,8 +33,8 @@ task_ids: []
 
 ## Dataset Description
 
-- **Repository:** [agent-firewall on GitHub](https://github.com/YOUR_USERNAME/agent-firewall)
-- **Paper / Documentation:** [Documentation](https://YOUR_USERNAME.github.io/agent-firewall/)
+- **Repository:** [agent-firewall on GitHub](https://github.com/DivyaKarotra/agent-firewall)
+- **Paper / Documentation:** [Documentation](https://DivyaKarotra.github.io/agent-firewall/)
 - **License:** MIT
 - **Task:** Prompt-injection detection and risk-aware policy decisions for LLM agent tool calls
 

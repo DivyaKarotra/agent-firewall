@@ -75,7 +75,7 @@ def main() -> None:
 
     print("\nDataset preparation complete! To upload to Hugging Face Hub:")
     print("  huggingface-cli login")
-    print(f"  huggingface-cli upload YOUR_USERNAME/agent-firewall-benchmark {args.output_dir} . --repo-type dataset")
+    print(f"  huggingface-cli upload DivyaKarotra/agent-firewall-benchmark {args.output_dir} . --repo-type dataset")
 
 
 if __name__ == "__main__":

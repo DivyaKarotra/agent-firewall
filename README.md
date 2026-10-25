@@ -1,10 +1,10 @@
 # agent-firewall
 
-[![CI](https://github.com/YOUR_USERNAME/agent-firewall/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/agent-firewall/actions)
+[![CI](https://github.com/DivyaKarotra/agent-firewall/actions/workflows/ci.yml/badge.svg)](https://github.com/DivyaKarotra/agent-firewall/actions)
 [![PyPI version](https://img.shields.io/pypi/v/agent-firewall.svg)](https://pypi.org/project/agent-firewall/)
 [![Python versions](https://img.shields.io/pypi/pyversions/agent-firewall.svg)](https://pypi.org/project/agent-firewall/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://YOUR_USERNAME.github.io/agent-firewall/)
+[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://DivyaKarotra.github.io/agent-firewall/)
 
 A risk-aware firewall for LLM agent tool calls that prevents prompt injection attacks.
 It intercepts untrusted content (emails, web pages, documents) before the agent acts on it.

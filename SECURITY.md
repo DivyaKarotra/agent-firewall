@@ -6,7 +6,7 @@ We take the security of `agent-firewall` seriously. If you discover a security v
 
 - **Do NOT open a public GitHub issue.**
 - Submit your finding via GitHub Private Vulnerability Reporting at:
-  `https://github.com/YOUR_USERNAME/agent-firewall/security/advisories/new`
+  `https://github.com/DivyaKarotra/agent-firewall/security/advisories/new`
 - Provide detailed steps to reproduce the vulnerability, including Python code snippets or injection payloads.
 - We will acknowledge receipt within 48 hours and coordinate a patch and disclosure timeline.
 

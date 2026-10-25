@@ -16,8 +16,8 @@ Key Engineering Innovations:
 🔹 **Honest & Reproducible Benchmarks:** Wilson 95% confidence intervals, zero number drift, and fully documented failure modes.
 
 📦 PyPI: `pip install agent-firewall`
-💻 GitHub: https://github.com/YOUR_USERNAME/agent-firewall
-📖 Documentation: https://YOUR_USERNAME.github.io/agent-firewall/
+💻 GitHub: https://github.com/DivyaKarotra/agent-firewall
+📖 Documentation: https://DivyaKarotra.github.io/agent-firewall/
 ✍️ Deep-dive blog post: https://YOUR_BLOG_URL/agent-firewall-cascade
 
 Would love your thoughts, feedback, and contributions!
