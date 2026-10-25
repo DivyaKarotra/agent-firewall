@@ -1,0 +1,389 @@
+{
+  "calibration": {
+    "method": "sigmoid",
+    "brier_score_in_sample": 0.0051,
+    "log_loss_in_sample": 0.0505,
+    "brier_score_oof": 0.0775,
+    "log_loss_oof": 0.2744
+  },
+  "uncertain_band": [
+    0.35,
+    0.75
+  ],
+  "thresholds": {
+    "low": {
+      "ask": null,
+      "block": 0.9
+    },
+    "medium": {
+      "ask": 0.8,
+      "block": 0.9
+    },
+    "high": {
+      "ask": 0.75,
+      "block": 0.85
+    }
+  },
+  "config_hash": "121ed5ee604c116464d798a39eed848dc8c29c5512d53845d6134b2a934dec2c",
+  "dev_samples": {
+    "attacks": 99,
+    "normal": 101,
+    "total": 200
+  },
+  "profiles": {
+    "strict": {
+      "description": "Strict policy profile",
+      "uncertain_band": [
+        0.35,
+        0.75
+      ],
+      "thresholds": {
+        "low": {
+          "ask": null,
+          "block": 0.85
+        },
+        "medium": {
+          "ask": 0.7,
+          "block": 0.85
+        },
+        "high": {
+          "ask": 0.5,
+          "block": 0.8
+        }
+      },
+      "config_hash": "30a474bf631e217d6bcfffea58f3ca7713d15f06f910d940c9ef28410a43fbed",
+      "dev_oof_outcomes": {
+        "gated_cascade_with_judge": {
+          "low": {
+            "attacks": {
+              "ALLOW": 18,
+              "ASK": 0,
+              "BLOCK": 81
+            },
+            "normal": {
+              "ALLOW": 94,
+              "ASK": 0,
+              "BLOCK": 7
+            },
+            "normal_flagged_pct": 6.93,
+            "attacks_caught_pct": 81.82,
+            "attacks_allow_pct": 18.18
+          },
+          "medium": {
+            "attacks": {
+              "ALLOW": 4,
+              "ASK": 14,
+              "BLOCK": 81
+            },
+            "normal": {
+              "ALLOW": 90,
+              "ASK": 4,
+              "BLOCK": 7
+            },
+            "normal_flagged_pct": 10.89,
+            "attacks_caught_pct": 95.96,
+            "attacks_allow_pct": 4.04
+          },
+          "high": {
+            "attacks": {
+              "ALLOW": 4,
+              "ASK": 3,
+              "BLOCK": 92
+            },
+            "normal": {
+              "ALLOW": 86,
+              "ASK": 6,
+              "BLOCK": 9
+            },
+            "normal_flagged_pct": 14.85,
+            "attacks_caught_pct": 95.96,
+            "attacks_allow_pct": 4.04
+          }
+        },
+        "rules_classifier_only": {
+          "low": {
+            "attacks": {
+              "ALLOW": 23,
+              "ASK": 0,
+              "BLOCK": 76
+            },
+            "normal": {
+              "ALLOW": 95,
+              "ASK": 0,
+              "BLOCK": 6
+            },
+            "normal_flagged_pct": 5.94,
+            "attacks_caught_pct": 76.77,
+            "attacks_allow_pct": 23.23
+          },
+          "medium": {
+            "attacks": {
+              "ALLOW": 12,
+              "ASK": 11,
+              "BLOCK": 76
+            },
+            "normal": {
+              "ALLOW": 91,
+              "ASK": 4,
+              "BLOCK": 6
+            },
+            "normal_flagged_pct": 9.9,
+            "attacks_caught_pct": 87.88,
+            "attacks_allow_pct": 12.12
+          },
+          "high": {
+            "attacks": {
+              "ALLOW": 5,
+              "ASK": 12,
+              "BLOCK": 82
+            },
+            "normal": {
+              "ALLOW": 87,
+              "ASK": 6,
+              "BLOCK": 8
+            },
+            "normal_flagged_pct": 13.86,
+            "attacks_caught_pct": 94.95,
+            "attacks_allow_pct": 5.05
+          }
+        }
+      }
+    },
+    "balanced": {
+      "description": "Balanced policy profile",
+      "uncertain_band": [
+        0.35,
+        0.75
+      ],
+      "thresholds": {
+        "low": {
+          "ask": null,
+          "block": 0.9
+        },
+        "medium": {
+          "ask": 0.8,
+          "block": 0.9
+        },
+        "high": {
+          "ask": 0.75,
+          "block": 0.85
+        }
+      },
+      "config_hash": "121ed5ee604c116464d798a39eed848dc8c29c5512d53845d6134b2a934dec2c",
+      "dev_oof_outcomes": {
+        "gated_cascade_with_judge": {
+          "low": {
+            "attacks": {
+              "ALLOW": 30,
+              "ASK": 0,
+              "BLOCK": 69
+            },
+            "normal": {
+              "ALLOW": 95,
+              "ASK": 0,
+              "BLOCK": 6
+            },
+            "normal_flagged_pct": 5.94,
+            "attacks_caught_pct": 69.7,
+            "attacks_allow_pct": 30.3
+          },
+          "medium": {
+            "attacks": {
+              "ALLOW": 7,
+              "ASK": 23,
+              "BLOCK": 69
+            },
+            "normal": {
+              "ALLOW": 92,
+              "ASK": 3,
+              "BLOCK": 6
+            },
+            "normal_flagged_pct": 8.91,
+            "attacks_caught_pct": 92.93,
+            "attacks_allow_pct": 7.07
+          },
+          "high": {
+            "attacks": {
+              "ALLOW": 4,
+              "ASK": 14,
+              "BLOCK": 81
+            },
+            "normal": {
+              "ALLOW": 90,
+              "ASK": 4,
+              "BLOCK": 7
+            },
+            "normal_flagged_pct": 10.89,
+            "attacks_caught_pct": 95.96,
+            "attacks_allow_pct": 4.04
+          }
+        },
+        "rules_classifier_only": {
+          "low": {
+            "attacks": {
+              "ALLOW": 35,
+              "ASK": 0,
+              "BLOCK": 64
+            },
+            "normal": {
+              "ALLOW": 96,
+              "ASK": 0,
+              "BLOCK": 5
+            },
+            "normal_flagged_pct": 4.95,
+            "attacks_caught_pct": 64.65,
+            "attacks_allow_pct": 35.35
+          },
+          "medium": {
+            "attacks": {
+              "ALLOW": 17,
+              "ASK": 18,
+              "BLOCK": 64
+            },
+            "normal": {
+              "ALLOW": 93,
+              "ASK": 3,
+              "BLOCK": 5
+            },
+            "normal_flagged_pct": 7.92,
+            "attacks_caught_pct": 82.83,
+            "attacks_allow_pct": 17.17
+          },
+          "high": {
+            "attacks": {
+              "ALLOW": 14,
+              "ASK": 9,
+              "BLOCK": 76
+            },
+            "normal": {
+              "ALLOW": 91,
+              "ASK": 4,
+              "BLOCK": 6
+            },
+            "normal_flagged_pct": 9.9,
+            "attacks_caught_pct": 85.86,
+            "attacks_allow_pct": 14.14
+          }
+        }
+      }
+    },
+    "lenient": {
+      "description": "Lenient policy profile",
+      "uncertain_band": [
+        0.35,
+        0.8
+      ],
+      "thresholds": {
+        "low": {
+          "ask": null,
+          "block": 0.95
+        },
+        "medium": {
+          "ask": 0.85,
+          "block": 0.95
+        },
+        "high": {
+          "ask": 0.8,
+          "block": 0.9
+        }
+      },
+      "config_hash": "0ddaa06857555534615c7579d02cdc09b1165fb2a72fb5944ffd69547300f8c5",
+      "dev_oof_outcomes": {
+        "gated_cascade_with_judge": {
+          "low": {
+            "attacks": {
+              "ALLOW": 40,
+              "ASK": 0,
+              "BLOCK": 59
+            },
+            "normal": {
+              "ALLOW": 98,
+              "ASK": 0,
+              "BLOCK": 3
+            },
+            "normal_flagged_pct": 2.97,
+            "attacks_caught_pct": 59.6,
+            "attacks_allow_pct": 40.4
+          },
+          "medium": {
+            "attacks": {
+              "ALLOW": 17,
+              "ASK": 23,
+              "BLOCK": 59
+            },
+            "normal": {
+              "ALLOW": 94,
+              "ASK": 4,
+              "BLOCK": 3
+            },
+            "normal_flagged_pct": 6.93,
+            "attacks_caught_pct": 82.83,
+            "attacks_allow_pct": 17.17
+          },
+          "high": {
+            "attacks": {
+              "ALLOW": 6,
+              "ASK": 23,
+              "BLOCK": 70
+            },
+            "normal": {
+              "ALLOW": 92,
+              "ASK": 3,
+              "BLOCK": 6
+            },
+            "normal_flagged_pct": 8.91,
+            "attacks_caught_pct": 93.94,
+            "attacks_allow_pct": 6.06
+          }
+        },
+        "rules_classifier_only": {
+          "low": {
+            "attacks": {
+              "ALLOW": 42,
+              "ASK": 0,
+              "BLOCK": 57
+            },
+            "normal": {
+              "ALLOW": 99,
+              "ASK": 0,
+              "BLOCK": 2
+            },
+            "normal_flagged_pct": 1.98,
+            "attacks_caught_pct": 57.58,
+            "attacks_allow_pct": 42.42
+          },
+          "medium": {
+            "attacks": {
+              "ALLOW": 23,
+              "ASK": 19,
+              "BLOCK": 57
+            },
+            "normal": {
+              "ALLOW": 95,
+              "ASK": 4,
+              "BLOCK": 2
+            },
+            "normal_flagged_pct": 5.94,
+            "attacks_caught_pct": 76.77,
+            "attacks_allow_pct": 23.23
+          },
+          "high": {
+            "attacks": {
+              "ALLOW": 17,
+              "ASK": 18,
+              "BLOCK": 64
+            },
+            "normal": {
+              "ALLOW": 93,
+              "ASK": 3,
+              "BLOCK": 5
+            },
+            "normal_flagged_pct": 7.92,
+            "attacks_caught_pct": 82.83,
+            "attacks_allow_pct": 17.17
+          }
+        }
+      }
+    }
+  }
+}
