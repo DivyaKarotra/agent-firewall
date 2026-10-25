@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-firewall"
+version = "0.1.0"
+description = "A risk-aware firewall for LLM agent tool calls (prompt-injection defence)"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "<MY NAME>" },
+]
+keywords = ["llm", "prompt-injection", "security", "firewall", "agent"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries",
+]
+
+# ZERO runtime dependencies -- stdlib only
+dependencies = []
+
+[project.optional-dependencies]
+ml = ["scikit-learn>=1.3", "joblib>=1.3"]
+dashboard = ["streamlit>=1.28"]
+dev = [
+    "pytest>=7.4",
+    "ruff>=0.1",
+    "scikit-learn>=1.3",
+    "joblib>=1.3",
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.5",
+    "build>=1.0",
+    "twine>=5.0",
+]
+
+[project.scripts]
+agent-firewall = "agent_firewall.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/YOUR_USERNAME/agent-firewall"
+Documentation = "https://YOUR_USERNAME.github.io/agent-firewall/"
+Issues = "https://github.com/YOUR_USERNAME/agent-firewall/issues"
+
+[tool.setuptools.packages.find]
+include = ["agent_firewall*"]
+
+[tool.setuptools.package-data]
+agent_firewall = ["py.typed"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501", "E402", "E741"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

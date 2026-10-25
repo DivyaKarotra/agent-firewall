@@ -1,0 +1,65 @@
+# Byte-compiled / optimized / cache
+__pycache__/
+__pycache__
+*.py[cod]
+*$py.class
+.pytest_cache/
+.pytest_cache
+.ruff_cache/
+.ruff_cache
+.cache/
+.cache
+results/.cache/
+results/.cache
+
+# Distribution / packaging
+dist/
+dist
+build/
+build
+*.egg-info/
+*.egg-info
+.eggs/
+*.egg
+*.whl
+*.so
+
+# Virtual environments
+.venv/
+.venv
+venv/
+venv
+venvs/
+venvs
+env/
+env
+
+# Environment files
+.env
+.env.*
+
+# Documentation build site
+site/
+site
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS artifacts
+Thumbs.db
+.DS_Store
+
+# Models
+models/
+*.joblib
+
+# Generated Hugging Face export
+hf_dataset/
+
+# Local scratch / test outputs
+scratch/
+test_venv/
