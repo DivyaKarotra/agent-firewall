@@ -1,0 +1,16 @@
+site_name: agent-firewall
+site_description: A risk-aware firewall for LLM agent tool calls
+repo_url: https://github.com/YOUR_USERNAME/agent-firewall
+
+theme:
+  name: material
+  palette:
+    primary: deep purple
+    accent: amber
+
+nav:
+  - Home: index.md
+  - How It Works: how-it-works.md
+  - Benchmark: benchmark.md
+  - Threat Model: threat-model.md
+  - Limitations: limitations.md

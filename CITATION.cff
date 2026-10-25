@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this software or benchmark dataset in your research, please cite it as below."
+authors:
+  - name: "<MY NAME>"
+title: "agent-firewall: A Risk-Aware Cascade Firewall for LLM Agent Tool Calls"
+version: 0.1.0
+date-released: 2026-10-25
+url: "https://github.com/YOUR_USERNAME/agent-firewall"
+license: MIT
+keywords:
+  - prompt-injection
+  - ai-security
+  - llm-firewall
+  - tool-use
+  - agent-safety
