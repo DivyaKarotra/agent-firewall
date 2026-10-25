@@ -33,6 +33,10 @@ venvs/
 venvs
 env/
 env
+cloud_venv/
+cloud_venv
+test_venv/
+test_venv
 
 # Environment files
 .env
