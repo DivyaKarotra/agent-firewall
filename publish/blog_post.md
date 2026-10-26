@@ -44,12 +44,13 @@ All metrics below are generated directly from the reproducible benchmark suite o
 | `judge_only (llama3.2:3b v2)` | fresh (evaluation set) | 76.8% [64.2, 85.9] | 6.8% [2.7, 16.2] | 3363.71 ms | 115 | -64.1s |
 | `rules_classifier` | fresh (evaluation set) | 83.9% [72.2, 91.3] | 5.1% [1.7, 13.9] | 23.54 ms | 0 | 322.7s |
 | `full_cascade_max` | fresh (evaluation set) | 92.9% [83.0, 97.2] | 11.9% [5.9, 22.5] | 2829.29 ms | 96 | 0.0s |
-| **`gated_cascade`** | fresh (evaluation set) | **85.7% [74.3, 92.6]** | **5.1% [1.7, 13.9]** | **843.58 ms** | **27** | **233.0s** |
+| **`gated_cascade`** | fresh (evaluation set) | **85.7% [74.3, 92.6]** | **5.1% [1.7, 13.9]** | **802.60 ms** | **27** | **233.0s** |
 
 ### Key Benchmark Takeaways
-1. **72% Fewer Judge Calls:** The gated cascade invoked the judge only 27 times across 115 evaluation runs (saving 69 calls and 233 seconds of CPU execution vs `full_cascade_max`).
-2. **Lower False Positive Rate:** False positives dropped from **11.9%** in `full_cascade_max` to **5.1%** in `gated_cascade`, because benign inputs with low classifier confidence never reach the judge.
-3. **Prompt Grounding Halved FP:** The grounded `v2` judge prompt cut false positives by half (from 13.6% in v1 to 6.8% in v2) by requiring specific evidence of goal-hijacking.
+1. **72% Fewer Judge Calls:** The gated cascade invoked the judge only 27 times across 115 evaluation runs (saving 69 calls and 233.0 seconds of CPU execution vs `full_cascade_max`; 27 of 115 judge calls, 802.60 ms vs 3363.71 ms judge-only).
+2. **Honest Judge Value:** On the fresh set, the judge adds only one extra attack catch over rules + classifier (47 to 48 of 56, within overlapping confidence intervals [72.2, 91.3] vs [74.3, 92.6]). Its value is concentrated in non-English/semantic cases at about 4x the latency (802.60 ms vs fast layer baseline).
+3. **Lower False Positive Rate:** False positives dropped from **11.9%** in `full_cascade_max` to **5.1%** in `gated_cascade`, because benign inputs with low classifier confidence never reach the judge.
+4. **Prompt Grounding Halved FP:** The grounded `v2` judge prompt cut false positives by half (from 13.6% in v1 to 6.8% in v2) by requiring specific evidence of goal-hijacking.
 
 ---
 
@@ -61,6 +62,7 @@ Building security tooling is about understanding failure modes:
 2. **Small Judges Struggle with Context:** Small 3B models (`llama3.2:3b`) easily mistake benign technical text quoting attack syntax (e.g. security articles) for actual live attacks.
 3. **Indirect Injections are Hard for Shallow Models:** Without the LLM judge, rules + classifier caught only 70% of indirect injections. Complex payload indirection requires semantic understanding.
 4. **Lexical False Positives:** Combinations like *"forward your resume to hr@example.com"* trigger exfiltration regexes.
+5. **Marginal Catch vs Latency Tradeoff:** On the fresh set, the judge adds only one extra attack catch (47 to 48 of 56, within the confidence intervals); its value is mostly non-English/semantic cases at about 4x the latency.
 
 ---
 

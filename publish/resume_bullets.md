@@ -8,7 +8,7 @@ Three tailored versions highlighting distinct technical angles for specialized r
 
 - **Architected and open-sourced `agent-firewall`**, a multi-stage cascade defense for LLM agent tool calls combining sub-millisecond regex heuristics, calibrated linear classification, and local LLM judges.
 - **Implemented Platt probability calibration** using 5-fold cross-validated sigmoid scaling on development splits, achieving reliable out-of-fold posterior confidence scores (Brier score 0.046) and preventing in-sample overfitting.
-- **Engineered an uncertain-band gating mechanism** (`[0.35, 0.75]`) that reduced expensive LLM judge calls by 72% (saving 233s CPU runtime over 115 test evaluations) while improving precision and reducing false-positive rates from 11.9% to 5.1%.
+- **Engineered an uncertain-band gating mechanism** (`[0.35, 0.75]`) that reduced expensive LLM judge calls by 72% (saving 233.0s CPU runtime over 115 evaluations on the exploratory evaluation set, 27 of 115 judge calls) while improving precision and reducing false-positive rates from 11.9% to 5.1%.
 - **Developed a standardized evaluation harness** with Wilson 95% confidence intervals, automated ablation reporting across 7 pipeline variants, and zero-drift metric generation scripts.
 
 ---

@@ -150,12 +150,23 @@ class Cascade:
                         error=str(e),
                     ))
         else:
+            try:
+                from agent_firewall.classifier import is_available
+                has_sklearn = is_available()
+            except ImportError:
+                has_sklearn = False
+
+            clf_reason = (
+                "Not configured"
+                if has_sklearn
+                else "classifier layer needs: pip install agent-firewall[ml]"
+            )
             layers.append(LayerScore(
                 name="classifier",
                 score=0.0,
                 latency_ms=0.0,
                 skipped=True,
-                reason="Not available",
+                reason=clf_reason,
             ))
 
         # --- Layer 3: Judge -------------------------------------------------

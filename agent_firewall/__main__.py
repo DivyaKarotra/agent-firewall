@@ -58,7 +58,21 @@ def _do_scan(args: argparse.Namespace) -> None:
             print("   Continuing without judge.\n", file=sys.stderr)
             judge = None
 
-    cascade = Cascade(judge=judge, combine=args.combine)
+    classifier = None
+    try:
+        from agent_firewall.classifier import MODEL_PATH, Classifier, is_available, load_data
+        if is_available():
+            clf = Classifier()
+            if MODEL_PATH.exists():
+                clf.load(MODEL_PATH)
+            else:
+                train_texts, train_labels, _, _ = load_data()
+                clf.train(train_texts, train_labels, calibrate=True)
+            classifier = clf
+    except Exception:
+        classifier = None
+
+    cascade = Cascade(judge=judge, classifier=classifier, combine=args.combine)
     result = cascade.evaluate(args.text)
 
     # Print results
@@ -74,7 +88,7 @@ def _do_scan(args: argparse.Namespace) -> None:
         print(f"  [{layer.name:12s}]  score={status:>10s}  latency={layer.latency_ms:.1f}ms")
         if layer.hits:
             print(f"                   hits: {', '.join(layer.hits)}")
-        if layer.reason and not layer.skipped:
+        if layer.reason:
             reason_short = layer.reason[:100]
             print(f"                   reason: {reason_short}")
         if layer.error:

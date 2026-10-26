@@ -881,4 +881,34 @@ class TestFrozenConfigIntegrity:
                 assert pol.thresholds[r].block == pytest.approx(t_dict["block"])
 
 
+class TestPackageData:
+    """Verify that bundled package data cannot drift from repo data."""
+
+    def test_bundled_data_byte_identical(self):
+        from pathlib import Path
+        repo_root = Path(__file__).parent.parent
+        repo_data = repo_root / "data"
+        pkg_data = repo_root / "agent_firewall" / "_data"
+
+        for fname in ["attacks.jsonl", "normal.jsonl"]:
+            repo_file = repo_data / fname
+            pkg_file = pkg_data / fname
+            assert repo_file.exists(), f"Repo file {repo_file} missing"
+            assert pkg_file.exists(), f"Bundled package file {pkg_file} missing"
+            assert pkg_file.read_bytes() == repo_file.read_bytes(), (
+                f"Bundled file {pkg_file} has drifted from {repo_file}"
+            )
+
+    def test_load_data_fallback(self, tmp_path):
+        # Explicit data_dir pointing to pkg_data
+        from pathlib import Path
+
+        from agent_firewall.classifier import load_data
+        pkg_data = Path(__file__).parent.parent / "agent_firewall" / "_data"
+        train_texts, train_labels, test_texts, test_labels = load_data(data_dir=pkg_data)
+        assert len(train_texts) > 0
+        assert len(train_labels) == len(train_texts)
+
+
+
 

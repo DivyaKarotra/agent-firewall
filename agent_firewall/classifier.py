@@ -153,7 +153,14 @@ def load_data(data_dir: Optional[Path] = None) -> tuple[list[str], list[int], li
     Labels: 1 = attack, 0 = normal.
     """
     if data_dir is None:
-        data_dir = Path(__file__).parent.parent / "data"
+        repo_data = Path(__file__).parent.parent / "data"
+        bundled_data = Path(__file__).parent / "_data"
+        if repo_data.exists() and (repo_data / "attacks.jsonl").exists():
+            data_dir = repo_data
+        elif bundled_data.exists() and (bundled_data / "attacks.jsonl").exists():
+            data_dir = bundled_data
+        else:
+            data_dir = repo_data
 
     train_texts: list[str] = []
     train_labels: list[int] = []
