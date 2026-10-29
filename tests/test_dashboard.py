@@ -5,6 +5,7 @@ Smoke tests for the Streamlit dashboard components and helper functions.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pytest
 
@@ -155,3 +156,40 @@ def test_css_text_opacity_and_contrast():
     rgba_text_matches = re.findall(r"color:\s*rgba\([^)]+,\s*([\d.]+)\)", CSS_STYLING)
     for alpha in rgba_text_matches:
         assert float(alpha) >= 0.85, f"Found CSS text color with alpha below 0.85: {alpha}"
+
+
+def test_layout_and_responsive_css():
+    """Verify that layout is wide via set_page_config, position: fixed for header,
+    media query at 768px, clamp( usage, scroll-margin-top, and no default underline
+    on nav/button links."""
+    app_file = Path(__file__).parent.parent / "dashboard" / "app.py"
+    app_content = app_file.read_text(encoding="utf-8")
+
+    # 1. layout wide via set_page_config call
+    assert 'layout="wide"' in app_content, "Expected layout='wide' in set_page_config call"
+
+    # 2. position: fixed for the header
+    assert re.search(r"position:\s*fixed", CSS_STYLING), "Expected position: fixed for header in CSS"
+
+    # 3. a media query at 768px
+    assert re.search(r"@media[^{]*768px", CSS_STYLING), "Expected media query at 768px in CSS"
+
+    # 4. clamp( usage
+    assert "clamp(" in CSS_STYLING, "Expected clamp() usage in CSS"
+
+    # 5. scroll-margin-top
+    assert "scroll-margin-top" in CSS_STYLING, "Expected scroll-margin-top in CSS"
+
+    # 6. that no CSS rule sets underline on nav/button links by default
+    nav_rule = re.search(r"\.nav-link-item\s*\{([^}]+)\}", CSS_STYLING)
+    assert nav_rule, "Expected .nav-link-item CSS rule"
+    assert "text-decoration: underline" not in nav_rule.group(1), ".nav-link-item must not have underline by default"
+
+    cta_rule = re.search(r"\.hero-cta-btn\s*\{([^}]+)\}", CSS_STYLING)
+    assert cta_rule, "Expected .hero-cta-btn CSS rule"
+    assert "text-decoration: underline" not in cta_rule.group(1), ".hero-cta-btn must not have underline by default"
+
+    cta_primary = re.search(r"\.hero-cta-primary\s*\{([^}]+)\}", CSS_STYLING)
+    assert cta_primary, "Expected .hero-cta-primary CSS rule"
+    assert "text-decoration: underline" not in cta_primary.group(1), ".hero-cta-primary must not have underline by default"
+

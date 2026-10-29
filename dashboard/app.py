@@ -22,6 +22,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import streamlit as st
 
+# Page Configuration MUST be the first Streamlit call
+st.set_page_config(
+    page_title="AgentFirewall",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
 from agent_firewall.cascade import Cascade
 from agent_firewall.judge import BaseJudge, JudgeResult, make_judge
 from agent_firewall.policy import Decision, Policy, RiskLevel
@@ -93,15 +101,6 @@ ICON_CLASSIFIER_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="20" heig
 
 ICON_JUDGE_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>"""
 
-# ---------------------------------------------------------------------------
-# Page Configuration
-# ---------------------------------------------------------------------------
-st.set_page_config(
-    page_title="AgentFirewall",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
 
 # ---------------------------------------------------------------------------
 # Friendly Rule Labels Mapping (covers every rule in agent_firewall.rules.RULES)
@@ -555,11 +554,29 @@ CSS_STYLING = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
+/* Smooth scrolling and target scroll margin */
+html {
+  scroll-behavior: smooth !important;
+}
+
+[id], #demo, #scanner, #how-it-works, #why-layers, #benchmarks {
+  scroll-margin-top: 88px !important;
+}
+
 /* Hide Streamlit default chrome & footer while keeping accessibility */
-#MainMenu { visibility: hidden; }
-footer { visibility: hidden; }
-header { visibility: hidden; }
-.stDeployButton { display: none; }
+#MainMenu,
+footer:not(.site-footer),
+header[data-testid="stHeader"],
+.stHeader,
+.stDeployButton,
+div[data-testid="stToolbar"],
+div[data-testid="stDecoration"],
+div[data-testid="stStatusWidget"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
 
 /* Global Typography & Background */
 html, body, [class*="st-"], .stApp {
@@ -572,35 +589,48 @@ code, pre, .mono-font {
   font-family: 'JetBrains Mono', monospace !important;
 }
 
-/* Ensure Streamlit containers respect dark theme */
+/* Full-width, fluid main container */
+.main .block-container,
+div[data-testid="stAppViewBlockContainer"],
 .block-container {
-  padding-top: 1rem;
-  padding-bottom: 3rem;
-  max-width: 1240px;
+  max-width: 1600px !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: clamp(16px, 4vw, 64px) !important;
+  padding-right: clamp(16px, 4vw, 64px) !important;
+  padding-top: 88px !important; /* Top padding for fixed header */
+  padding-bottom: 3rem !important;
 }
 
-/* Sticky-looking Header */
+/* Fixed Header Bar (always visible) */
 .top-nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.8rem 1.4rem;
-  margin-bottom: 1.5rem;
-  background: #121A33;
-  border: 1px solid #263261;
-  border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  padding: 0 clamp(16px, 4vw, 64px);
+  background: rgba(11, 16, 32, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #263261;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
 }
 
 .brand-wrapper {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 .brand-wordmark {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.3px;
   color: #E8ECF8;
@@ -613,28 +643,51 @@ code, pre, .mono-font {
 .nav-links-cluster {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
 }
 
+/* Base link styling */
+a {
+  color: #22D3EE;
+  text-decoration: none !important;
+  outline-offset: 2px;
+}
+
+a:hover, a:focus {
+  text-decoration: underline !important;
+}
+
+a:focus-visible {
+  outline: 2px solid #22D3EE;
+}
+
+/* Nav links: muted text #A9B3D1, no default underline, accent underline on hover */
 .nav-link-item {
-  color: #A9B3D1;
-  font-size: 0.9rem;
+  color: #A9B3D1 !important;
+  font-size: 0.92rem;
   font-weight: 500;
-  text-decoration: none;
-  transition: color 0.15s ease-in-out;
+  text-decoration: none !important;
+  border-bottom: 2px solid transparent;
+  padding: 0.2rem 0;
+  transition: color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
 
 .nav-link-item:hover, .nav-link-item:focus {
-  color: #22D3EE;
-  text-decoration: underline;
+  color: #22D3EE !important;
+  text-decoration: none !important;
+  border-bottom: 2px solid #22D3EE;
+}
+
+.nav-link-item:focus-visible {
+  outline: 2px solid #22D3EE;
 }
 
 /* Hero Section with Scan-line Gradient Effect */
 .hero-container {
   position: relative;
   overflow: hidden;
-  padding: 2.2rem 2.2rem;
+  padding: clamp(1.5rem, 3.5vw, 2.8rem);
   background: #121A33;
   border: 1px solid #263261;
   border-radius: 16px;
@@ -659,28 +712,32 @@ code, pre, .mono-font {
 }
 
 .hero-headline {
-  font-size: 2.25rem;
+  font-size: clamp(28px, 4vw, 52px);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.15;
   letter-spacing: -0.5px;
-  margin-bottom: 0.6rem;
-  background: linear-gradient(120deg, #FFFFFF 30%, #22D3EE 80%, #6366F1 100%);
+  margin: 0 0 0.5rem 0;
+  color: #E8ECF8;
+}
+
+.hero-gradient-text {
+  background: linear-gradient(120deg, #FFFFFF 20%, #22D3EE 70%, #6366F1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .hero-tagline {
-  font-size: 1.15rem;
+  font-size: clamp(16px, 1.8vw, 22px);
   font-weight: 600;
   color: #22D3EE;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.8rem;
 }
 
 .hero-body-text {
-  font-size: 1.02rem;
+  font-size: clamp(15px, 1.2vw, 17px);
   line-height: 1.6;
   color: #E8ECF8;
-  max-width: 860px;
+  max-width: 880px;
   margin-bottom: 1.4rem;
 }
 
@@ -696,37 +753,42 @@ code, pre, .mono-font {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.6rem 1.3rem;
+  padding: 0.65rem 1.4rem;
   border-radius: 10px;
   font-size: 0.95rem;
   font-weight: 600;
-  text-decoration: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .hero-cta-primary {
-  background: #22D3EE;
+  background: #22D3EE !important;
   color: #0B1020 !important;
+  text-decoration: none !important;
+  font-weight: 700;
   box-shadow: 0 0 15px rgba(34, 211, 238, 0.35);
 }
 
-.hero-cta-primary:hover {
+.hero-cta-primary:hover, .hero-cta-primary:focus {
+  color: #0B1020 !important;
+  text-decoration: none !important;
   transform: translateY(-2px);
   box-shadow: 0 0 22px rgba(34, 211, 238, 0.55);
-  color: #0B1020 !important;
 }
 
 .hero-cta-secondary {
-  background: #172042;
-  border: 1px solid #263261;
+  background: #172042 !important;
+  border: 1px solid #263261 !important;
   color: #E8ECF8 !important;
+  text-decoration: none !important;
 }
 
-.hero-cta-secondary:hover {
-  background: #1F2942;
-  border-color: #22D3EE;
+.hero-cta-secondary:hover, .hero-cta-secondary:focus {
+  background: #1F2942 !important;
+  border-color: #22D3EE !important;
+  color: #22D3EE !important;
+  text-decoration: none !important;
   transform: translateY(-2px);
-  color: #E8ECF8 !important;
 }
 
 .hero-chips-row {
@@ -752,23 +814,23 @@ code, pre, .mono-font {
   margin-right: 0.3rem;
 }
 
-/* 3-Step Strip */
+/* 3-Step Strip: CSS Grid */
 .strip-container {
-  display: flex;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
   margin-bottom: 2rem;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .strip-card {
-  flex: 1;
-  min-width: 250px;
-  padding: 1.2rem 1.3rem;
+  padding: 1.25rem 1.4rem;
   background: #172042;
   border: 1px solid #263261;
   border-radius: 16px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   transition: transform 0.2s ease, border-color 0.2s ease;
+  width: 100%;
 }
 
 .strip-card:hover {
@@ -865,17 +927,26 @@ code, pre, .mono-font {
   margin: 0;
 }
 
-/* Layer Cards */
+/* Layer Cards Grid & Progress */
+.layer-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
 .layer-card-container {
   padding: 1.3rem;
   background: #172042;
   border: 1px solid #263261;
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  width: 100%;
 }
 
 .layer-card-header {
@@ -944,6 +1015,23 @@ code, pre, .mono-font {
   margin: 0.2rem 0.2rem 0.2rem 0;
 }
 
+.layer-card-progress-track {
+  width: 100%;
+  height: 8px;
+  background: #121A33;
+  border: 1px solid #263261;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.8rem;
+}
+
+.layer-card-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22D3EE, #6366F1);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
 /* Example Cards */
 .ex-card-box {
   padding: 1.1rem;
@@ -957,6 +1045,7 @@ code, pre, .mono-font {
   justify-content: space-between;
   min-height: 160px;
   transition: transform 0.15s ease, border-color 0.15s ease;
+  width: 100%;
 }
 
 .ex-card-box:hover {
@@ -1080,19 +1169,19 @@ code, pre, .mono-font {
   padding-top: 2rem;
   border-top: 1px solid #263261;
   background: #0B1020;
+  width: 100%;
 }
 
 .footer-grid {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
-  flex-wrap: wrap;
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .footer-col {
-  flex: 1;
-  min-width: 240px;
+  width: 100%;
 }
 
 .footer-col-title {
@@ -1120,15 +1209,15 @@ code, pre, .mono-font {
 }
 
 .footer-links-list a {
-  color: #A9B3D1;
-  text-decoration: none;
+  color: #A9B3D1 !important;
+  text-decoration: none !important;
   font-size: 0.9rem;
   transition: color 0.15s ease-in-out;
 }
 
-.footer-links-list a:hover {
-  color: #22D3EE;
-  text-decoration: underline;
+.footer-links-list a:hover, .footer-links-list a:focus {
+  color: #22D3EE !important;
+  text-decoration: underline !important;
 }
 
 .footer-bottom-bar {
@@ -1140,56 +1229,159 @@ code, pre, .mono-font {
   line-height: 1.5;
 }
 
-/* Responsive Overrides (Clean Stack down to 390px) */
-@media (max-width: 768px) {
-  .hero-headline { font-size: 1.8rem; }
-  .top-nav-bar { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
-  .strip-container { flex-direction: column; }
-  .footer-grid { flex-direction: column; gap: 1.5rem; }
+/* Tabs & Form Controls Theme Consistency */
+div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+  background-color: #121A33 !important;
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid #263261;
+  gap: 4px;
 }
 
-@media (max-width: 480px) {
-  .hero-headline { font-size: 1.5rem; }
-  .hero-container { padding: 1.3rem; }
-  .hero-btn-row { flex-direction: column; align-items: stretch; }
-  .hero-cta-btn { justify-content: center; width: 100%; }
+button[data-baseweb="tab"] {
+  color: #A9B3D1 !important;
+  border-radius: 8px !important;
+  padding: 0.6rem 1.2rem !important;
+  font-weight: 600 !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+button[data-baseweb="tab"]:hover {
+  color: #E8ECF8 !important;
+  background-color: #172042 !important;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+  color: #0B1020 !important;
+  background-color: #22D3EE !important;
+  font-weight: 700 !important;
+}
+
+div[data-testid="stExpander"] {
+  background-color: #172042 !important;
+  border: 1px solid #263261 !important;
+  border-radius: 12px !important;
+}
+
+div[data-testid="stExpander"] details summary {
+  background-color: #121A33 !important;
+  color: #E8ECF8 !important;
+}
+
+div[data-baseweb="select"] {
+  background-color: #172042 !important;
+  border-color: #263261 !important;
+  color: #E8ECF8 !important;
+}
+
+div[data-baseweb="select"] * {
+  color: #E8ECF8 !important;
+}
+
+div[data-testid="stTextArea"] textarea {
+  background-color: #121A33 !important;
+  color: #E8ECF8 !important;
+  border: 1px solid #263261 !important;
+}
+
+/* Tablet Media Query (769px to 1024px): 2 across for example cards */
+@media (min-width: 769px) and (max-width: 1024px) {
+  div[data-testid="stHorizontalBlock"]:has(.ex-card-box) {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+  div[data-testid="stHorizontalBlock"]:has(.ex-card-box) > div[data-testid="column"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+}
+
+/* Mobile Media Query (<= 768px): clean 1-column stack, fluid header, 1 across */
+@media (max-width: 768px) {
+  .top-nav-bar {
+    height: auto;
+    min-height: 56px;
+    padding: 0.5rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .nav-links-cluster {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    gap: 0.85rem;
+    padding-bottom: 0.2rem;
+    scrollbar-width: none;
+    max-width: 100%;
+  }
+  .nav-links-cluster::-webkit-scrollbar {
+    display: none;
+  }
+  .main .block-container,
+  div[data-testid="stAppViewBlockContainer"],
+  .block-container {
+    padding-top: 104px !important;
+  }
+  div[data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  div[data-testid="column"] {
+    width: 100% !important;
+    min-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+  .hero-btn-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-cta-btn {
+    justify-content: center;
+    width: 100%;
+  }
 }
 </style>
 """
 st.markdown(CSS_STYLING, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# STICKY-LOOKING HEADER (Requirement 3: Logo, Wordmark, Nav Links)
+# FIXED HEADER BAR (Always Visible at Top, z-index: 1000)
 # ---------------------------------------------------------------------------
 st.markdown(
     f"""
-<div class="top-nav-bar">
+<header class="top-nav-bar">
   <div class="brand-wrapper">
     {LOGO_SVG}
     <span class="brand-wordmark">Agent<span>Firewall</span></span>
   </div>
-  <div class="nav-links-cluster">
+  <nav class="nav-links-cluster" aria-label="Main Navigation">
     <a href="#demo" class="nav-link-item">Demo</a>
     <a href="#scanner" class="nav-link-item">Scanner</a>
-    <a href="#why-layers" class="nav-link-item">How It Works</a>
+    <a href="#how-it-works" class="nav-link-item">How It Works</a>
+    <a href="#why-layers" class="nav-link-item">Why Layers?</a>
     <a href="#benchmarks" class="nav-link-item">Benchmarks</a>
     <a href="{REPO_URL}" target="_blank" rel="noopener noreferrer" class="nav-link-item">GitHub</a>
     <a href="{DOCS_URL}" target="_blank" rel="noopener noreferrer" class="nav-link-item">Docs</a>
-  </div>
-</div>
+  </nav>
+</header>
 """,
     unsafe_allow_html=True,
 )
 
 # ---------------------------------------------------------------------------
-# HERO SECTION (Requirement 3: Gradient Title, Tagline, Stats, CTA Buttons)
+# HERO SECTION (Requirement 3: Clean H1, Tagline Once, Stats, CTA Buttons)
 # ---------------------------------------------------------------------------
 stats_data = load_benchmark_results()
 
 st.markdown(
     f"""
 <div class="hero-container">
-  <div class="hero-headline">AgentFirewall: {BRAND_TAGLINE}</div>
+  <h1 class="hero-headline">Agent<span class="hero-gradient-text">Firewall</span></h1>
   <div class="hero-tagline">{BRAND_TAGLINE}</div>
   <p class="hero-body-text">
     AI assistants read emails, documents, and web pages. Attackers hide commands inside them, like
@@ -1612,116 +1804,109 @@ with tab_scanner:
         st.markdown("---")
         st.subheader("4. Three-Layer Defense Breakdown")
 
-        card_col1, card_col2, card_col3 = st.columns(3)
-
         # Layer 1: Rules
-        with card_col1:
-            rules_layer = result.layers[0] if result.layers else None
-            rules_score = rules_layer.score if rules_layer else 0.0
-            rules_time = f"{rules_layer.latency_ms:.1f} ms" if rules_layer else "<1 ms"
-            rules_pct = int(round(rules_score * 100))
+        rules_layer = result.layers[0] if result.layers else None
+        rules_score = rules_layer.score if rules_layer else 0.0
+        rules_time = f"{rules_layer.latency_ms:.1f} ms" if rules_layer else "<1 ms"
+        rules_pct = int(round(rules_score * 100))
 
-            chips_html = "".join([
-                f"<span class='chip-tag'>{get_friendly_rule_label(h)}</span>"
-                for h in (rules_layer.hits if rules_layer else [])
-            ]) or "<span style='font-size:0.8rem; color:#A9B3D1;'>No pattern matches</span>"
-
-            st.markdown(
-                f"""
-                <div class="layer-card-container">
-                  <div>
-                    <div class="layer-card-header">
-                      <div class="layer-card-title-wrap">{ICON_RULES_SVG} Layer 1: Rules</div>
-                      <span class="status-pill-checked">Checked</span>
-                    </div>
-                    <div class="layer-desc-text">Instantly scans for known attack patterns, hidden HTML comments, and base64 payloads.</div>
-                    <div style="font-size:0.85rem; color:#A9B3D1; margin-bottom:0.4rem;">
-                      Score: <strong style="color:#22D3EE;">{rules_pct}%</strong> | Latency: <strong>{rules_time}</strong>
-                    </div>
-                  </div>
-                  <div style="margin-top:0.6rem;">{chips_html}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.progress(rules_score)
+        chips_html = "".join([
+            f"<span class='chip-tag'>{get_friendly_rule_label(h)}</span>"
+            for h in (rules_layer.hits if rules_layer else [])
+        ]) or "<span style='font-size:0.8rem; color:#A9B3D1;'>No pattern matches</span>"
 
         # Layer 2: Classifier
-        with card_col2:
-            clf_layer = result.layers[1] if len(result.layers) > 1 else None
-            clf_score = clf_layer.score if (clf_layer and not clf_layer.skipped) else 0.0
-            clf_time = f"{clf_layer.latency_ms:.1f} ms" if (clf_layer and not clf_layer.skipped) else "—"
-            clf_pct = int(round(clf_score * 100))
+        clf_layer = result.layers[1] if len(result.layers) > 1 else None
+        clf_score = clf_layer.score if (clf_layer and not clf_layer.skipped) else 0.0
+        clf_time = f"{clf_layer.latency_ms:.1f} ms" if (clf_layer and not clf_layer.skipped) else "—"
+        clf_pct = int(round(clf_score * 100))
 
-            if clf_layer and clf_layer.skipped:
-                pill_html = "<span class='status-pill-skipped'>Skipped (Decisive)</span>"
-                note_text = "Skipped: Layer 1 was decisive (score &ge; 0.90)."
-            elif clf_layer:
-                pill_html = "<span class='status-pill-checked'>Checked</span>"
-                note_text = f"Score: <strong style='color:#22D3EE;'>{clf_pct}%</strong> | Latency: <strong>{clf_time}</strong>"
-            else:
-                pill_html = "<span class='status-pill-offline'>Disabled</span>"
-                note_text = "Layer disabled."
-
-            st.markdown(
-                f"""
-                <div class="layer-card-container">
-                  <div>
-                    <div class="layer-card-header">
-                      <div class="layer-card-title-wrap">{ICON_CLASSIFIER_SVG} Layer 2: ML Classifier</div>
-                      {pill_html}
-                    </div>
-                    <div class="layer-desc-text">Statistical model trained on attack grammar to catch rephrased or multilingual variants.</div>
-                    <div style="font-size:0.85rem; color:#A9B3D1; margin-bottom:0.4rem;">{note_text}</div>
-                  </div>
-                  <div style="font-size:0.8rem; color:#A9B3D1;">Calibrated Logistic Regression</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.progress(clf_score)
+        if clf_layer and clf_layer.skipped:
+            pill_html = "<span class='status-pill-skipped'>Skipped (Decisive)</span>"
+            note_text = "Skipped: Layer 1 was decisive (score &ge; 0.90)."
+        elif clf_layer:
+            pill_html = "<span class='status-pill-checked'>Checked</span>"
+            note_text = f"Score: <strong style='color:#22D3EE;'>{clf_pct}%</strong> | Latency: <strong>{clf_time}</strong>"
+        else:
+            pill_html = "<span class='status-pill-offline'>Disabled</span>"
+            note_text = "Layer disabled."
 
         # Layer 3: AI Judge
-        with card_col3:
-            judge_layer = result.layers[2] if len(result.layers) > 2 else None
-            judge_score = judge_layer.score if (judge_layer and not judge_layer.skipped) else 0.0
-            judge_time = (
-                f"{judge_layer.latency_ms / 1000:.1f} s"
-                if (judge_layer and not judge_layer.skipped and judge_layer.latency_ms > 0)
-                else "—"
-            )
-            judge_pct = int(round(judge_score * 100))
+        judge_layer = result.layers[2] if len(result.layers) > 2 else None
+        judge_score = judge_layer.score if (judge_layer and not judge_layer.skipped) else 0.0
+        judge_time = (
+            f"{judge_layer.latency_ms / 1000:.1f} s"
+            if (judge_layer and not judge_layer.skipped and judge_layer.latency_ms > 0)
+            else "—"
+        )
+        judge_pct = int(round(judge_score * 100))
 
-            if judge_layer and judge_layer.skipped:
-                judge_pill = "<span class='status-pill-skipped'>Skipped (Gated)</span>"
-                judge_note = "Skipped: Earlier layers were outside uncertain band [0.35, 0.75], saving ~3s."
-            elif judge_layer and judge_layer.error and "disabled" in judge_layer.error.lower():
-                judge_pill = "<span class='status-pill-offline'>Offline in demo</span>"
-                judge_note = "Precomputed for benchmark inputs; offline for arbitrary custom text."
-            elif judge_layer:
-                judge_pill = "<span class='status-pill-checked'>Checked</span>"
-                judge_note = f"Score: <strong style='color:#22D3EE;'>{judge_pct}%</strong> | Latency: <strong>{judge_time}</strong>"
-            else:
-                judge_pill = "<span class='status-pill-skipped'>Not invoked</span>"
-                judge_note = "Not invoked."
+        if judge_layer and judge_layer.skipped:
+            judge_pill = "<span class='status-pill-skipped'>Skipped (Gated)</span>"
+            judge_note = "Skipped: Earlier layers were outside uncertain band [0.35, 0.75], saving ~3s."
+        elif judge_layer and judge_layer.error and "disabled" in judge_layer.error.lower():
+            judge_pill = "<span class='status-pill-offline'>Offline in demo</span>"
+            judge_note = "Precomputed for benchmark inputs; offline for arbitrary custom text."
+        elif judge_layer:
+            judge_pill = "<span class='status-pill-checked'>Checked</span>"
+            judge_note = f"Score: <strong style='color:#22D3EE;'>{judge_pct}%</strong> | Latency: <strong>{judge_time}</strong>"
+        else:
+            judge_pill = "<span class='status-pill-skipped'>Not invoked</span>"
+            judge_note = "Not invoked."
 
-            st.markdown(
-                f"""
-                <div class="layer-card-container">
-                  <div>
-                    <div class="layer-card-header">
-                      <div class="layer-card-title-wrap">{ICON_JUDGE_SVG} Layer 3: AI Judge</div>
-                      {judge_pill}
-                    </div>
-                    <div class="layer-desc-text">Deep reasoning LLM invoked only in the uncertain score band [0.35, 0.75] to save cost.</div>
-                    <div style="font-size:0.85rem; color:#A9B3D1; margin-bottom:0.4rem;">{judge_note}</div>
+        st.markdown(
+            f"""
+            <div class="layer-cards-grid">
+              <div class="layer-card-container">
+                <div>
+                  <div class="layer-card-header">
+                    <div class="layer-card-title-wrap">{ICON_RULES_SVG} Layer 1: Rules</div>
+                    <span class="status-pill-checked">Checked</span>
                   </div>
-                  <div style="font-size:0.8rem; color:#A9B3D1;">Ollama llama3.2:3b / Prompt v2</div>
+                  <div class="layer-desc-text">Instantly scans for known attack patterns, hidden HTML comments, and base64 payloads.</div>
+                  <div style="font-size:0.85rem; color:#A9B3D1; margin-bottom:0.4rem;">
+                    Score: <strong style="color:#22D3EE;">{rules_pct}%</strong> | Latency: <strong>{rules_time}</strong>
+                  </div>
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.progress(judge_score)
+                <div style="margin-top:0.6rem;">{chips_html}</div>
+                <div class="layer-card-progress-track">
+                  <div class="layer-card-progress-fill" style="width: {rules_pct}%;"></div>
+                </div>
+              </div>
+
+              <div class="layer-card-container">
+                <div>
+                  <div class="layer-card-header">
+                    <div class="layer-card-title-wrap">{ICON_CLASSIFIER_SVG} Layer 2: ML Classifier</div>
+                    {pill_html}
+                  </div>
+                  <div class="layer-desc-text">Statistical model trained on attack grammar to catch rephrased or multilingual variants.</div>
+                  <div style="font-size:0.85rem; color:#A9B3D1; margin-bottom:0.4rem;">{note_text}</div>
+                </div>
+                <div style="font-size:0.8rem; color:#A9B3D1; margin-top:0.6rem;">Calibrated Logistic Regression</div>
+                <div class="layer-card-progress-track">
+                  <div class="layer-card-progress-fill" style="width: {clf_pct}%;"></div>
+                </div>
+              </div>
+
+              <div class="layer-card-container">
+                <div>
+                  <div class="layer-card-header">
+                    <div class="layer-card-title-wrap">{ICON_JUDGE_SVG} Layer 3: AI Judge</div>
+                    {judge_pill}
+                  </div>
+                  <div class="layer-desc-text">Deep reasoning LLM invoked only in the uncertain score band [0.35, 0.75] to save cost.</div>
+                  <div style="font-size:0.85rem; color:#A9B3D1; margin-bottom:0.4rem;">{judge_note}</div>
+                </div>
+                <div style="font-size:0.8rem; color:#A9B3D1; margin-top:0.6rem;">Ollama llama3.2:3b / Prompt v2</div>
+                <div class="layer-card-progress-track">
+                  <div class="layer-card-progress-fill" style="width: {judge_pct}%;"></div>
+                </div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         # 5d. Action-Aware Decisions Across Risk Levels
         st.markdown("---")

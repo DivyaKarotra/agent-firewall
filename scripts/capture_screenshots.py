@@ -62,7 +62,7 @@ async def capture_png(ws, file_path, req_id=200):
         print(f"Failed to capture screenshot for {file_path}: {res}", flush=True)
 
 
-async def capture_suite(width: int, height: int, suffix: str):
+async def capture_suite(width: int, height: int, suffix: str, full_suite: bool = True):
     temp_profile = os.path.join(os.environ["TEMP"], f"edge_cdp_{width}_{int(time.time())}")
     os.makedirs(temp_profile, exist_ok=True)
 
@@ -121,57 +121,76 @@ async def capture_suite(width: int, height: int, suffix: str):
             await asyncio.sleep(2)
 
             # 1. Hero Screenshot (top view)
-            await eval_js(ws, "window.scrollTo(0, 0)", req_id=102)
+            await eval_js(ws, """
+                (() => {
+                    const scroller = document.querySelector('[data-testid="stMain"]') || document.querySelector('main');
+                    if (scroller) scroller.scrollTop = 0;
+                    window.scrollTo(0, 0);
+                })()
+            """, req_id=102)
             await asyncio.sleep(1)
             hero_name = "dashboard_hero.png" if suffix == "" else f"dashboard_hero_{suffix}.png"
             hero_path = os.path.join(DOCS_IMG_DIR, hero_name)
             await capture_png(ws, hero_path, req_id=103)
 
-            # 2. Poisoned Email Blocked View (scroll down slightly into Demo)
-            print(f"Selecting Poisoned Email at {width}px...", flush=True)
-            await eval_js(ws, """
-                (() => {
-                    const labels = Array.from(document.querySelectorAll("label"));
-                    const poisonRadio = labels.find(l => l.textContent.includes("Poisoned Email"));
-                    if (poisonRadio) poisonRadio.click();
-                    const demoEl = document.getElementById("demo");
-                    if (demoEl) demoEl.scrollIntoView({ behavior: 'instant', block: 'start' });
-                })()
-            """, req_id=104)
-            await asyncio.sleep(2)
-            blocked_name = "dashboard_poisoned_blocked.png" if suffix == "" else f"dashboard_poisoned_blocked_{suffix}.png"
-            blocked_path = os.path.join(DOCS_IMG_DIR, blocked_name)
-            await capture_png(ws, blocked_path, req_id=105)
+            if full_suite:
+                # 2. Poisoned Email Blocked View (scroll down slightly into Demo)
+                print(f"Selecting Poisoned Email at {width}px...", flush=True)
+                await eval_js(ws, """
+                    (() => {
+                        const labels = Array.from(document.querySelectorAll("label"));
+                        const poisonRadio = labels.find(l => l.textContent.includes("Poisoned Email"));
+                        if (poisonRadio) poisonRadio.click();
+                        const demoEl = document.getElementById("demo");
+                        if (demoEl) demoEl.scrollIntoView({ behavior: 'instant', block: 'start' });
+                    })()
+                """, req_id=104)
+                await asyncio.sleep(2)
+                blocked_name = "dashboard_poisoned_blocked.png" if suffix == "" else f"dashboard_poisoned_blocked_{suffix}.png"
+                blocked_path = os.path.join(DOCS_IMG_DIR, blocked_name)
+                await capture_png(ws, blocked_path, req_id=105)
 
-            # 3. Normal Email Allowed View
-            print(f"Selecting Normal Email at {width}px...", flush=True)
-            await eval_js(ws, """
-                (() => {
-                    const labels = Array.from(document.querySelectorAll("label"));
-                    const normalRadio = labels.find(l => l.textContent.includes("Normal Email"));
-                    if (normalRadio) normalRadio.click();
-                    const demoEl = document.getElementById("demo");
-                    if (demoEl) demoEl.scrollIntoView({ behavior: 'instant', block: 'start' });
-                })()
-            """, req_id=106)
-            await asyncio.sleep(2)
-            allowed_name = "dashboard_normal_allowed.png" if suffix == "" else f"dashboard_normal_allowed_{suffix}.png"
-            allowed_path = os.path.join(DOCS_IMG_DIR, allowed_name)
-            await capture_png(ws, allowed_path, req_id=107)
+                # 3. Normal Email Allowed View
+                print(f"Selecting Normal Email at {width}px...", flush=True)
+                await eval_js(ws, """
+                    (() => {
+                        const labels = Array.from(document.querySelectorAll("label"));
+                        const normalRadio = labels.find(l => l.textContent.includes("Normal Email"));
+                        if (normalRadio) normalRadio.click();
+                        const demoEl = document.getElementById("demo");
+                        if (demoEl) demoEl.scrollIntoView({ behavior: 'instant', block: 'start' });
+                    })()
+                """, req_id=106)
+                await asyncio.sleep(2)
+                allowed_name = "dashboard_normal_allowed.png" if suffix == "" else f"dashboard_normal_allowed_{suffix}.png"
+                allowed_path = os.path.join(DOCS_IMG_DIR, allowed_name)
+                await capture_png(ws, allowed_path, req_id=107)
 
-            # 4. Footer View
-            print(f"Scrolling to footer at {width}px...", flush=True)
-            await eval_js(ws, """
-                (() => {
-                    const footer = document.querySelector(".site-footer");
-                    if (footer) footer.scrollIntoView({ behavior: 'instant', block: 'end' });
-                    else window.scrollTo(0, document.body.scrollHeight);
-                })()
-            """, req_id=108)
-            await asyncio.sleep(1.5)
-            footer_name = "dashboard_footer.png" if suffix == "" else f"dashboard_footer_{suffix}.png"
-            footer_path = os.path.join(DOCS_IMG_DIR, footer_name)
-            await capture_png(ws, footer_path, req_id=109)
+                # 4. Scrolled 1500px View (proving fixed header remains visible)
+                if suffix == "":
+                    print("Scrolling down 1500px to capture fixed header view...", flush=True)
+                    await eval_js(ws, """
+                        (() => {
+                            const scroller = document.querySelector('[data-testid="stMain"]') || document.querySelector('main');
+                            if (scroller) scroller.scrollTop = 1500;
+                        })()
+                    """, req_id=108)
+                    await asyncio.sleep(2)
+                    scrolled_path = os.path.join(DOCS_IMG_DIR, "dashboard_scrolled_header.png")
+                    await capture_png(ws, scrolled_path, req_id=109)
+
+                # 5. Footer View
+                print(f"Scrolling to footer at {width}px...", flush=True)
+                await eval_js(ws, """
+                    (() => {
+                        const scroller = document.querySelector('[data-testid="stMain"]') || document.querySelector('main');
+                        if (scroller) scroller.scrollTop = scroller.scrollHeight;
+                    })()
+                """, req_id=110)
+                await asyncio.sleep(2)
+                footer_name = "dashboard_footer.png" if suffix == "" else f"dashboard_footer_{suffix}.png"
+                footer_path = os.path.join(DOCS_IMG_DIR, footer_name)
+                await capture_png(ws, footer_path, req_id=111)
 
     finally:
         proc.terminate()
@@ -182,14 +201,21 @@ async def capture_suite(width: int, height: int, suffix: str):
 
 
 async def main():
-    print("=== CAPTURING 1440px DESKTOP SCREENSHOTS ===", flush=True)
-    await capture_suite(width=1440, height=960, suffix="")
+    print("=== CAPTURING 1920px WIDE DESKTOP SCREENSHOT ===", flush=True)
+    await capture_suite(width=1920, height=1080, suffix="1920", full_suite=False)
+
+    print("=== CAPTURING 1440px STANDARD DESKTOP SCREENSHOTS ===", flush=True)
+    await capture_suite(width=1440, height=960, suffix="", full_suite=True)
+
+    print("=== CAPTURING 1024px TABLET SCREENSHOT ===", flush=True)
+    await capture_suite(width=1024, height=768, suffix="1024", full_suite=False)
 
     print("=== CAPTURING 390px MOBILE SCREENSHOTS ===", flush=True)
-    await capture_suite(width=390, height=844, suffix="390")
+    await capture_suite(width=390, height=844, suffix="390", full_suite=True)
 
     print("All screenshots generated successfully!", flush=True)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
