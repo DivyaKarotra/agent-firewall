@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22D3EE" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    <linearGradient id="shieldFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0.08" />
+    </linearGradient>
+  </defs>
+  <!-- Shield boundary with subtle cyber-security contour -->
+  <path d="M24 4L7 11V22C7 32.5 14.2 41.5 24 44C33.8 41.5 41 32.5 41 22V11L24 4Z" fill="url(#shieldFill)" stroke="url(#shieldGrad)" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Checkpoint Bracket & Slash Motif </> -->
+  <path d="M18 19L13 24L18 29" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 19L35 24L30 29" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 18L22 30" stroke="#E8ECF8" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

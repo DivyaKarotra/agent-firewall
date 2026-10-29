@@ -4,13 +4,19 @@ Smoke tests for the Streamlit dashboard components and helper functions.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from agent_firewall.cascade import CascadeResult
 from agent_firewall.policy import Decision, Policy, RiskLevel
 from agent_firewall.rules import RULES
 from dashboard.app import (
+    AUTHOR_NAME,
+    CSS_STYLING,
     FRIENDLY_RULE_LABELS,
+    PALETTE_PAIRS,
+    REPO_URL,
     generate_verdict_sentence,
     get_cascade,
     get_classifier_model,
@@ -19,10 +25,30 @@ from dashboard.app import (
 )
 
 
+def _srgb_to_linear(val: float) -> float:
+    c = val / 255.0
+    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+
+def _relative_luminance(hex_color: str) -> float:
+    hex_clean = hex_color.lstrip("#")
+    r = int(hex_clean[0:2], 16)
+    g = int(hex_clean[2:4], 16)
+    b = int(hex_clean[4:6], 16)
+    return 0.2126 * _srgb_to_linear(r) + 0.7152 * _srgb_to_linear(g) + 0.0722 * _srgb_to_linear(b)
+
+
+def _calculate_contrast_ratio(c1: str, c2: str) -> float:
+    l1 = _relative_luminance(c1)
+    l2 = _relative_luminance(c2)
+    lighter = max(l1, l2)
+    darker = min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
 def test_dashboard_classifier_loader():
     """Verify that get_classifier_model returns a classifier or None gracefully."""
     clf = get_classifier_model()
-    # If scikit-learn is installed, it should be trained and fitted
     if clf is not None:
         assert hasattr(clf, "predict_proba")
 
@@ -102,3 +128,30 @@ def test_load_benchmark_results():
     assert "sample_count" in results
     assert isinstance(results["sample_count"], int)
     assert results["sample_count"] > 0
+
+
+def test_palette_pairs_wcag_contrast():
+    """Verify that all PALETTE_PAIRS meet WCAG AA contrast ratio >= 4.5:1."""
+    assert len(PALETTE_PAIRS) >= 10, "Expected at least 10 documented palette color pairs"
+    for pair_name, (text_color, bg_color) in PALETTE_PAIRS.items():
+        ratio = _calculate_contrast_ratio(text_color, bg_color)
+        assert ratio >= 4.5, f"Palette pair '{pair_name}' ({text_color} on {bg_color}) has contrast {ratio:.2f}:1 (< 4.5:1)"
+
+
+def test_footer_contains_repo_and_author():
+    """Verify that footer metadata contains repo URL and author name."""
+    assert "Divya Karotra" in AUTHOR_NAME
+    assert "github.com/DivyaKarotra/agent-firewall" in REPO_URL
+
+
+def test_css_text_opacity_and_contrast():
+    """Verify that no CSS text color uses an alpha/opacity below 0.85."""
+    # Check for any opacity rule below 0.85
+    opacity_matches = re.findall(r"opacity:\s*(0\.\d+)", CSS_STYLING)
+    for op in opacity_matches:
+        assert float(op) >= 0.85, f"Found CSS opacity below 0.85: opacity: {op}"
+
+    # Check for color declarations using rgba with alpha below 0.85
+    rgba_text_matches = re.findall(r"color:\s*rgba\([^)]+,\s*([\d.]+)\)", CSS_STYLING)
+    for alpha in rgba_text_matches:
+        assert float(alpha) >= 0.85, f"Found CSS text color with alpha below 0.85: {alpha}"
