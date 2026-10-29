@@ -12,6 +12,8 @@ Instead of a binary allow/block, it evaluates tool risk to decide: ALLOW, ASK, o
 Fast rules (<1 ms) and calibrated ML (<20 ms) resolve decisive cases immediately.
 An LLM judge is invoked only within an uncertain score band, saving latency and API cost.
 
+![agent-firewall Hero](docs/img/dashboard_hero.png)
+
 | Poisoned Email Blocked | Normal Email Allowed |
 | :---: | :---: |
 | ![Poisoned Email Blocked](docs/img/dashboard_poisoned_blocked.png) | ![Normal Email Allowed](docs/img/dashboard_normal_allowed.png) |

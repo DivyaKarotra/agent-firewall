@@ -1,8 +1,9 @@
 """
 Headless browser screenshot script using Edge CDP.
 Captures:
-1. docs/img/dashboard_poisoned_blocked.png
-2. docs/img/dashboard_normal_allowed.png
+1. docs/img/dashboard_hero.png
+2. docs/img/dashboard_poisoned_blocked.png
+3. docs/img/dashboard_normal_allowed.png
 """
 
 import asyncio
@@ -81,17 +82,21 @@ async def main():
             try:
                 with urllib.request.urlopen(f"http://localhost:{PORT}/json/list", timeout=1) as resp:
                     tabs = json.loads(resp.read().decode())
-                    if tabs:
-                        ws_url = tabs[0].get("webSocketDebuggerUrl")
-                        if ws_url:
-                            break
+                    # Look specifically for the Streamlit page target, not background extension pages
+                    page_tabs = [
+                        t for t in tabs
+                        if t.get("type") == "page" and "8505" in t.get("url", "")
+                    ]
+                    if page_tabs:
+                        ws_url = page_tabs[0].get("webSocketDebuggerUrl")
+                        break
             except Exception:
                 pass
 
         if not ws_url:
-            raise RuntimeError("Could not connect to Edge CDP endpoint")
+            raise RuntimeError("Could not connect to Edge CDP endpoint for Streamlit page")
 
-        print(f"Connected to CDP: {ws_url}", flush=True)
+        print(f"Connected to CDP page: {ws_url}", flush=True)
         async with websockets.connect(ws_url, max_size=30_000_000) as ws:
             await send_cmd(ws, "Page.enable", req_id=1)
             await send_cmd(ws, "Runtime.enable", req_id=2)
@@ -104,38 +109,27 @@ async def main():
 
             print("Waiting for Streamlit app to load...", flush=True)
             for _ in range(30):
-                has_tabs = await eval_js(ws, "document.querySelectorAll('button[data-baseweb=\"tab\"]').length > 0", req_id=101)
-                if has_tabs:
+                has_hero = await eval_js(
+                    ws,
+                    "document.querySelectorAll('.hero-box').length > 0",
+                    req_id=101,
+                )
+                if has_hero:
                     break
                 await asyncio.sleep(0.5)
 
             await asyncio.sleep(2)
 
-            # --- Screenshot 1: Poisoned Email Blocked ---
-            print("Switching to Demo tab...", flush=True)
-            await eval_js(ws, """
-                (() => {
-                    const tabs = Array.from(document.querySelectorAll("button[data-baseweb='tab']"));
-                    const demoTab = tabs.find(t => t.textContent.includes("Unprotected vs Protected"));
-                    if (demoTab) demoTab.click();
-                })()
-            """, req_id=102)
-            await asyncio.sleep(2)
+            # --- Screenshot 1: Hero View ---
+            hero_path = os.path.join(DOCS_IMG_DIR, "dashboard_hero.png")
+            await capture_png(ws, hero_path, req_id=102)
 
-            print("Clicking Simulate Agent Tool Execution for Poisoned Email...", flush=True)
-            await eval_js(ws, """
-                (() => {
-                    const btns = Array.from(document.querySelectorAll("button"));
-                    const runBtn = btns.find(b => b.textContent.includes("Simulate Agent Tool Execution"));
-                    if (runBtn) runBtn.click();
-                })()
-            """, req_id=103)
-            await asyncio.sleep(3)
-
+            # --- Screenshot 2: Poisoned Email Blocked (Default view in Tab 1) ---
+            print("Capturing dashboard_poisoned_blocked.png...", flush=True)
             blocked_path = os.path.join(DOCS_IMG_DIR, "dashboard_poisoned_blocked.png")
-            await capture_png(ws, blocked_path, req_id=104)
+            await capture_png(ws, blocked_path, req_id=103)
 
-            # --- Screenshot 2: Normal Email Allowed ---
+            # --- Screenshot 3: Normal Email Allowed ---
             print("Selecting Normal Email radio option...", flush=True)
             await eval_js(ws, """
                 (() => {
@@ -143,21 +137,12 @@ async def main():
                     const normalRadio = labels.find(l => l.textContent.includes("Normal Email"));
                     if (normalRadio) normalRadio.click();
                 })()
-            """, req_id=105)
+            """, req_id=104)
             await asyncio.sleep(2)
 
-            print("Clicking Simulate Agent Tool Execution for Normal Email...", flush=True)
-            await eval_js(ws, """
-                (() => {
-                    const btns = Array.from(document.querySelectorAll("button"));
-                    const runBtn = btns.find(b => b.textContent.includes("Simulate Agent Tool Execution"));
-                    if (runBtn) runBtn.click();
-                })()
-            """, req_id=106)
-            await asyncio.sleep(3)
-
+            print("Capturing dashboard_normal_allowed.png...", flush=True)
             allowed_path = os.path.join(DOCS_IMG_DIR, "dashboard_normal_allowed.png")
-            await capture_png(ws, allowed_path, req_id=107)
+            await capture_png(ws, allowed_path, req_id=105)
 
         print("Finished screenshot routine successfully!", flush=True)
 

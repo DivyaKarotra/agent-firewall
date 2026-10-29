@@ -2,6 +2,8 @@
 
 A risk-aware firewall for LLM agent tool calls (prompt-injection defence).
  
+![agent-firewall Hero](img/dashboard_hero.png)
+
 | Poisoned Email Blocked | Normal Email Allowed |
 | :---: | :---: |
 | ![Poisoned Email Blocked](img/dashboard_poisoned_blocked.png) | ![Normal Email Allowed](img/dashboard_normal_allowed.png) |
