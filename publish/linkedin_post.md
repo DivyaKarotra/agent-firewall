@@ -1,7 +1,7 @@
 <!--
-TODO before posting:
-1. Replace YOUR_BLOG_URL with your actual published blog URL.
-2. Add live demo URL (e.g., Streamlit Community Cloud / HuggingFace Spaces link) once deployed.
+Pre-posting checklist:
+1. Verify published links before sharing.
+2. Add live demo URL once deployed.
 -->
 
 🚀 Excited to open-source **`agent-firewall`**: A risk-aware cascade defense against prompt injection for LLM agent tool calls!
@@ -24,7 +24,7 @@ Key Engineering Innovations:
 📦 PyPI: `pip install agent-firewall`
 💻 GitHub: https://github.com/DivyaKarotra/agent-firewall
 📖 Documentation: https://DivyaKarotra.github.io/agent-firewall/
-✍️ Deep-dive blog post: https://YOUR_BLOG_URL/agent-firewall-cascade
+✍️ Deep-dive blog post: https://github.com/DivyaKarotra/agent-firewall/blob/main/publish/blog_post.md
 
 Would love your thoughts, feedback, and contributions!
 

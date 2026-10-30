@@ -16,6 +16,8 @@ from dashboard.app import (
     AUTHOR_NAME,
     CSS_STYLING,
     FRIENDLY_RULE_LABELS,
+    LINKS,
+    LIVE,
     PALETTE_PAIRS,
     REPO_URL,
     generate_verdict_sentence,
@@ -223,5 +225,81 @@ def test_css_font_sizes_not_below_14px():
             px = float(rem_match.group(1)) * 16
             assert px >= 14.0, f"Found rem font-size below 14px ({px}px): {val}"
             continue
+
+
+def test_dashboard_in_page_anchors_have_matching_ids():
+    """Verify that every in-page anchor (#target) in dashboard/app.py has a matching id."""
+    app_path = Path(__file__).parent.parent / "dashboard" / "app.py"
+    content = app_path.read_text(encoding="utf-8")
+
+    # Find all href="#..." anchors
+    anchors = re.findall(r'href=["\']#([^"\'>\s]+)["\']', content)
+    assert len(anchors) > 0, "No in-page anchors found in dashboard/app.py"
+
+    # Find all element id="..." or id='...' attributes
+    element_ids = set(re.findall(r'id=["\']([^"\'>\s]+)["\']', content))
+
+    # Assert no empty or dummy '#' links exist
+    empty_anchors = re.findall(r'href=["\']#["\']', content)
+    assert len(empty_anchors) == 0, "Found placeholder href='#' in dashboard/app.py"
+
+    for anchor in set(anchors):
+        assert anchor in element_ids, f"Anchor #{anchor} does not have a matching element id in dashboard/app.py"
+
+
+def test_dashboard_external_urls_come_from_links_dict():
+    """Verify that all external navigation URLs in dashboard/app.py come from the LINKS dict."""
+    app_path = Path(__file__).parent.parent / "dashboard" / "app.py"
+    content = app_path.read_text(encoding="utf-8")
+
+    # Required keys in LINKS dict
+    required_keys = {"github_repo", "issues", "docs", "pypi", "dataset", "author_profile", "license"}
+    assert required_keys.issubset(set(LINKS.keys())), f"LINKS dict missing required keys: {required_keys - set(LINKS.keys())}"
+
+    # Required keys in LIVE dict
+    assert {"github", "docs", "pypi", "dataset"}.issubset(set(LIVE.keys()))
+
+    # Find all external URLs inside href="..." in app.py
+    # Note: font links or xml namespaces in head/svg are excluded
+    href_urls = set(re.findall(r'href=["\'](https?://[^"\'>\s]+)["\']', content))
+    allowed_external_urls = set(LINKS.values()) | {
+        "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap",
+    }
+
+    # Also resolve f-string variable hrefs like href="{LINKS['docs']}"
+    for url in href_urls:
+        if "{" in url:
+            continue
+        assert url in allowed_external_urls, f"External href URL '{url}' is not defined in LINKS dict"
+
+
+def test_no_placeholder_strings_remain():
+    """Verify that no placeholder strings (YOUR_USERNAME, YOUR_BLOG_URL, etc.) remain in project files."""
+    repo_root = Path(__file__).parent.parent
+    check_files = [
+        repo_root / "dashboard" / "app.py",
+        repo_root / "README.md",
+        repo_root / "mkdocs.yml",
+        repo_root / "pyproject.toml",
+        repo_root / "CITATION.cff",
+        *sorted((repo_root / "docs").glob("*.md")),
+        *sorted((repo_root / "publish").glob("*.md")),
+    ]
+
+    forbidden_patterns = [
+        "YOUR_USERNAME",
+        "YOUR_BLOG_URL",
+        "your-username",
+        "your_username",
+    ]
+
+    for file_path in check_files:
+        if not file_path.is_file():
+            continue
+        content = file_path.read_text(encoding="utf-8")
+        rel_path = file_path.relative_to(repo_root).as_posix()
+        for placeholder in forbidden_patterns:
+            assert placeholder not in content, f"Found forbidden placeholder '{placeholder}' in {rel_path}"
+
 
 

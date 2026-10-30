@@ -35,17 +35,39 @@ from agent_firewall.judge import BaseJudge, JudgeResult, make_judge
 from agent_firewall.policy import Decision, Policy, RiskLevel
 
 # ---------------------------------------------------------------------------
-# Brand & Palette Definitions
+# Brand & Links Definitions (Single Source of Truth)
 # ---------------------------------------------------------------------------
 BRAND_NAME = "AgentFirewall"
 BRAND_TAGLINE = "Stops hidden instructions from hijacking AI agents."
-REPO_URL = "https://github.com/DivyaKarotra/agent-firewall"
-DOCS_URL = "https://DivyaKarotra.github.io/agent-firewall/"
-ISSUES_URL = "https://github.com/DivyaKarotra/agent-firewall/issues"
-PYPI_URL = "https://pypi.org/project/agent-firewall/"
-DATASET_URL = "https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark"
 AUTHOR_NAME = "Divya Karotra"
-AUTHOR_GITHUB = "https://github.com/DivyaKarotra"
+
+# Single source of truth for all links
+LINKS: dict[str, str] = {
+    "github_repo": "https://github.com/DivyaKarotra/agent-firewall",
+    "issues": "https://github.com/DivyaKarotra/agent-firewall/issues",
+    "docs": "https://DivyaKarotra.github.io/agent-firewall/",
+    "pypi": "https://pypi.org/project/agent-firewall/",
+    "dataset": "https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark",
+    "author_profile": "https://github.com/DivyaKarotra",
+    "license": "https://github.com/DivyaKarotra/agent-firewall/blob/main/LICENSE",
+}
+
+# Live flags for items published or pending
+LIVE: dict[str, bool] = {
+    "github": True,
+    "docs": False,
+    "pypi": False,
+    "dataset": False,
+}
+
+# Compatibility aliases
+REPO_URL = LINKS["github_repo"]
+DOCS_URL = LINKS["docs"]
+ISSUES_URL = LINKS["issues"]
+PYPI_URL = LINKS["pypi"]
+DATASET_URL = LINKS["dataset"]
+AUTHOR_GITHUB = LINKS["author_profile"]
+LICENSE_URL = LINKS["license"]
 
 # Text / background colour pairs for WCAG contrast verification (contrast >= 4.5:1)
 PALETTE_PAIRS: dict[str, tuple[str, str]] = {
@@ -930,6 +952,38 @@ a:focus-visible {
   text-decoration: none !important;
 }
 
+.nav-link-disabled,
+.footer-link-disabled {
+  cursor: default;
+  color: #7C8BAE !important;
+  text-decoration: none !important;
+  pointer-events: none;
+}
+
+.nav-soon-pill {
+  display: inline-block;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #172042;
+  border: 1px solid #263261;
+  color: #22D3EE;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+/* In-Page Target Anchors Scroll Margin */
+.nav-target-anchor,
+#how-it-works,
+#demo,
+#scanner,
+#why-layers,
+#benchmarks {
+  scroll-margin-top: 84px !important;
+}
+
 /* Hero Section: Calm 2-Column Layout on Wide Screens */
 .hero-container {
   position: relative;
@@ -1678,8 +1732,20 @@ div[data-testid="stExpander"] details summary {
 st.markdown(CSS_STYLING, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# FIXED HEADER BAR (Always Visible at Top, 68px, z-index: 1000)
+# FIXED HEADER BAR & IN-PAGE NAV SCRIPT
 # ---------------------------------------------------------------------------
+if LIVE["docs"]:
+    docs_nav_item = f'<a href="{LINKS["docs"]}" target="_blank" rel="noopener noreferrer" class="nav-link-item">Docs</a>'
+else:
+    docs_nav_item = '<span class="nav-link-item nav-link-disabled" title="Documentation site deploying soon">Docs <span class="nav-soon-pill">Soon</span></span>'
+
+if LIVE["github"]:
+    header_gh_btn = f'<a href="{LINKS["github_repo"]}" target="_blank" rel="noopener noreferrer" class="nav-github-btn">GitHub</a>'
+    hero_gh_btn = f'<a href="{LINKS["github_repo"]}" target="_blank" rel="noopener noreferrer" class="hero-cta-btn hero-cta-secondary">View on GitHub &rarr;</a>'
+else:
+    header_gh_btn = '<span class="nav-github-btn nav-link-disabled">GitHub</span>'
+    hero_gh_btn = '<span class="hero-cta-btn hero-cta-secondary nav-link-disabled">GitHub (Coming Soon)</span>'
+
 st.markdown(
     f"""
 <header class="top-nav-bar">
@@ -1688,15 +1754,15 @@ st.markdown(
     <span class="brand-wordmark"><span class="brand-gradient-text">AgentFirewall</span></span>
   </div>
   <nav class="nav-links-cluster" aria-label="Main Navigation">
-    <a href="#demo" class="nav-link-item">Demo</a>
-    <a href="#scanner" class="nav-link-item">Scanner</a>
-    <a href="#how-it-works" class="nav-link-item">How It Works</a>
-    <a href="#why-layers" class="nav-link-item">Why Layers?</a>
-    <a href="#benchmarks" class="nav-link-item">Benchmarks</a>
-    <a href="{DOCS_URL}" target="_blank" rel="noopener noreferrer" class="nav-link-item">Docs</a>
+    <a href="#demo" target="_self" class="nav-link-item">Demo</a>
+    <a href="#scanner" target="_self" class="nav-link-item">Scanner</a>
+    <a href="#how-it-works" target="_self" class="nav-link-item">How It Works</a>
+    <a href="#why-layers" target="_self" class="nav-link-item">Why Layers?</a>
+    <a href="#benchmarks" target="_self" class="nav-link-item">Benchmarks</a>
+    {docs_nav_item}
   </nav>
   <div class="header-right-action">
-    <a href="{REPO_URL}" target="_blank" rel="noopener noreferrer" class="nav-github-btn">GitHub</a>
+    {header_gh_btn}
   </div>
 </header>
 """,
@@ -1719,8 +1785,8 @@ st.markdown(
         AI assistants read emails, documents, and web pages. Attackers hide commands inside them to hijack actions like forwarding passwords or data. AgentFirewall checks every action before execution to keep agents safe.
       </p>
       <div class="hero-btn-row">
-        <a href="#demo" class="hero-cta-btn hero-cta-primary">Try the live demo &darr;</a>
-        <a href="{REPO_URL}" target="_blank" rel="noopener noreferrer" class="hero-cta-btn hero-cta-secondary">View on GitHub &rarr;</a>
+        <a href="#demo" target="_self" class="hero-cta-btn hero-cta-primary">Try the live demo &darr;</a>
+        {hero_gh_btn}
       </div>
       <div class="hero-chips-row">
         <div class="hero-stat-chip"><strong>{stats_data.get('rules_classifier_catch', '83.9%')}</strong> attacks caught</div>
@@ -1742,7 +1808,8 @@ st.markdown(
 # ---------------------------------------------------------------------------
 st.markdown(
     f"""
-<div class="strip-container" id="how-it-works">
+<div id="how-it-works" class="nav-target-anchor"></div>
+<div class="strip-container">
   <div class="strip-card">
     <div class="strip-card-top">
       <span class="strip-num-badge">1</span>
@@ -1780,6 +1847,12 @@ ollama_available = check_ollama_reachable()
 # ---------------------------------------------------------------------------
 # Main Tabs: Story Demo FIRST, Interactive Scanner SECOND
 # ---------------------------------------------------------------------------
+st.markdown(
+    "<div id='demo' class='nav-target-anchor'></div>"
+    "<div id='scanner' class='nav-target-anchor'></div>"
+    "<div id='why-layers' class='nav-target-anchor'></div>",
+    unsafe_allow_html=True,
+)
 query_demo = st.query_params.get("demo", "")
 tab_story, tab_scanner = st.tabs([
     "🛡️ Unprotected vs Protected Agent (Story Demo)",
@@ -1790,7 +1863,6 @@ tab_story, tab_scanner = st.tabs([
 # TAB 1: STORY DEMO (Unprotected vs Protected Agent)
 # ---------------------------------------------------------------------------
 with tab_story:
-    st.markdown("<div id='demo'></div>", unsafe_allow_html=True)
     st.subheader("How an Attack Works & How AgentFirewall Halts It")
     st.markdown(
         "Compare what happens when an AI assistant receives an email containing a hidden injection attack."
@@ -1922,7 +1994,6 @@ with tab_story:
 # TAB 2: INTERACTIVE CONTENT SCANNER
 # ---------------------------------------------------------------------------
 with tab_scanner:
-    st.markdown("<div id='scanner'></div>", unsafe_allow_html=True)
     if "scanner_input" not in st.session_state:
         st.session_state["scanner_input"] = POISONED_EMAIL
         st.session_state["selected_example_id"] = "hijacked"
@@ -2128,7 +2199,7 @@ with tab_scanner:
 
         st.markdown(
             """
-            <div class="callout-info" id="why-layers">
+            <div class="callout-info">
               <strong>Why Defense in Depth?</strong>
               Regex rules catch known delimiters in &lt;1 ms; calibrated ML catches reworded grammar at ~25 ms; the AI Judge resolves deep ambiguity. Relying on an LLM alone is 100x slower and easily fooled by encoded payloads.
             </div>
@@ -2333,7 +2404,7 @@ with tab_scanner:
 # "How Well Does It Work?" Section (Requirement 3: Benchmarks & Honest Note)
 # ---------------------------------------------------------------------------
 st.markdown("---")
-st.markdown("<div id='benchmarks'></div>", unsafe_allow_html=True)
+st.markdown("<div id='benchmarks' class='nav-target-anchor'></div>", unsafe_allow_html=True)
 st.subheader("How Well Does It Work?")
 stats = load_benchmark_results()
 
@@ -2365,8 +2436,34 @@ st.markdown(
 )
 
 # ---------------------------------------------------------------------------
-# SITE FOOTER (Requirement 3: 3 Columns + Bottom Bar)
+# SITE FOOTER (Requirement 2 & 3: LINKS Dict, LIVE Flags & 3 Columns)
 # ---------------------------------------------------------------------------
+if LIVE["github"]:
+    footer_license_html = f'<a href="{LINKS["license"]}" target="_blank" rel="noopener noreferrer" style="color:#22D3EE; font-weight:600; text-decoration:none;">MIT License</a> &middot; Open Source'
+    res_github_html = f'<li><a href="{LINKS["github_repo"]}" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>'
+    res_issues_html = f'<li><a href="{LINKS["issues"]}" target="_blank" rel="noopener noreferrer">Report a Bug / Issue</a></li>'
+    footer_author_html = f'Built by <a href="{LINKS["author_profile"]}" target="_blank" rel="noopener noreferrer" style="color:#22D3EE; font-weight:600; text-decoration:none;">{AUTHOR_NAME}</a>'
+else:
+    footer_license_html = 'MIT License &middot; Open Source'
+    res_github_html = '<li><span class="footer-link-disabled">GitHub Repository (Coming Soon)</span></li>'
+    res_issues_html = '<li><span class="footer-link-disabled">Report a Bug / Issue (Coming Soon)</span></li>'
+    footer_author_html = f'Built by <span style="color:#22D3EE; font-weight:600;">{AUTHOR_NAME}</span>'
+
+if LIVE["docs"]:
+    res_docs_html = f'<li><a href="{LINKS["docs"]}" target="_blank" rel="noopener noreferrer">Documentation Site</a></li>'
+else:
+    res_docs_html = '<li><span class="footer-link-disabled">Documentation Site (Coming Soon)</span></li>'
+
+if LIVE["pypi"]:
+    res_pypi_html = f'<li><a href="{LINKS["pypi"]}" target="_blank" rel="noopener noreferrer">PyPI Package (agent-firewall)</a></li>'
+else:
+    res_pypi_html = '<li><span class="footer-link-disabled">PyPI Package (Coming Soon)</span></li>'
+
+if LIVE["dataset"]:
+    res_dataset_html = f'<li><a href="{LINKS["dataset"]}" target="_blank" rel="noopener noreferrer">HuggingFace Dataset Card</a></li>'
+else:
+    res_dataset_html = '<li><span class="footer-link-disabled">HuggingFace Dataset (Coming Soon)</span></li>'
+
 st.markdown(
     f"""
 <footer class="site-footer">
@@ -2377,21 +2474,21 @@ st.markdown(
         <span class="footer-brand-name">{BRAND_NAME}</span>
       </div>
       <p class="footer-text">A risk-aware firewall for AI agents stopping prompt injection attacks.</p>
-      <p class="footer-text" style="color:#22D3EE; font-weight:600;">MIT License &middot; Open Source</p>
+      <p class="footer-text">{footer_license_html}</p>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Resources &amp; Links</div>
       <ul class="footer-links-list">
-        <li><a href="{REPO_URL}" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
-        <li><a href="{DOCS_URL}" target="_blank" rel="noopener noreferrer">Documentation Site</a></li>
-        <li><a href="{PYPI_URL}" target="_blank" rel="noopener noreferrer">PyPI Package (agent-firewall)</a></li>
-        <li><a href="{DATASET_URL}" target="_blank" rel="noopener noreferrer">HuggingFace Dataset Card</a></li>
-        <li><a href="{ISSUES_URL}" target="_blank" rel="noopener noreferrer">Report a Bug / Issue</a></li>
+        {res_github_html}
+        {res_docs_html}
+        {res_pypi_html}
+        {res_dataset_html}
+        {res_issues_html}
       </ul>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Author &amp; Research</div>
-      <p class="footer-text">Built by <a href="{AUTHOR_GITHUB}" target="_blank" rel="noopener noreferrer" style="color:#22D3EE; font-weight:600;">{AUTHOR_NAME}</a></p>
+      <p class="footer-text">{footer_author_html}</p>
       <p class="footer-text">Research in AI Safety, Agent Tool Call Interception, and Prompt Injection Defense.</p>
     </div>
   </div>

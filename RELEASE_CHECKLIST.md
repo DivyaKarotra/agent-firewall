@@ -25,14 +25,10 @@ git push -u origin main
 1. **GitHub Actions (CI)**:
    - Navigate to `https://github.com/DivyaKarotra/agent-firewall/actions`.
    - Ensure the `CI` workflow (`.github/workflows/ci.yml`) runs and passes on `main`.
-2. **GitHub Pages (Documentation)**:
-   - Go to **Settings $\rightarrow$ Pages**.
-   - Under **Build and deployment**, select **Source:** `Deploy from a branch` $\rightarrow$ Branch: `gh-pages` / `/ (root)`.
-   - Trigger the documentation build workflow, or run locally:
-     ```bash
-     python -m mkdocs gh-deploy --strict
-     ```
-   - Verify docs are live at `https://DivyaKarotra.github.io/agent-firewall/`.
+2. **GitHub Pages (Documentation Site)**:
+   - **Step 1**: In the GitHub repository, navigate to **Settings** $\rightarrow$ **Pages**.
+   - **Step 2**: Under **Build and deployment**, set **Source** to **GitHub Actions** (uses `.github/workflows/docs.yml` with `actions/upload-pages-artifact` and `actions/deploy-pages`).
+   - **Step 3**: Push to `main` (or run **Deploy Documentation** via the **Actions** tab) and verify docs are live at `https://DivyaKarotra.github.io/agent-firewall/`.
 
 ---
 
