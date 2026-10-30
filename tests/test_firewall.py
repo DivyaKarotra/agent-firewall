@@ -832,7 +832,9 @@ class TestFrozenConfigIntegrity:
         from agent_firewall.cascade import Cascade
         from agent_firewall.policy import DEFAULT_THRESHOLDS, Policy, RiskLevel
 
-        cfg_path = Path("results/frozen_config.json")
+        cfg_path = Path(__file__).parent.parent / "results" / "frozen_config.json"
+        if not cfg_path.exists():
+            cfg_path = Path("results/frozen_config.json")
         assert cfg_path.exists(), "results/frozen_config.json must exist"
 
         with open(cfg_path, encoding="utf-8") as f:

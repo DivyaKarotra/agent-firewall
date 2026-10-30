@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip("streamlit", reason="Streamlit is required for dashboard tests")
+
 from agent_firewall.cascade import CascadeResult
 from agent_firewall.policy import Decision, Policy, RiskLevel
 from agent_firewall.rules import RULES
