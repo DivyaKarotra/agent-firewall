@@ -1416,16 +1416,46 @@ a:focus-visible {
 }
 
 /* Example Cards: Uniform Height with Pinned Button */
-div[data-testid="column"]:has(.ex-card-box) {
+div[data-testid="column"]:has(.ex-card-box),
+div[data-testid="column"]:has(.ex-card-content) {
   display: flex !important;
   flex-direction: column !important;
 }
 
-div[data-testid="column"]:has(.ex-card-box) > div[data-testid="stVerticalBlock"] {
+div[data-testid="column"] div[data-testid="stVerticalBlockBorderWrapper"] {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+div[data-testid="column"] div[data-testid="stVerticalBlockBorderWrapper"] > div[data-testid="stVerticalBlock"] {
+  height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   flex: 1 1 auto !important;
-  height: 100% !important;
+  justify-content: space-between !important;
+}
+
+div[data-testid="column"] div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] {
+  margin-top: auto !important;
+  width: 100% !important;
+}
+
+div[data-testid="column"] div[data-testid="stVerticalBlockBorderWrapper"]:has(.ex-card-selected) {
+  border-color: #22D3EE !important;
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.35) !important;
+}
+
+.ex-card-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.ex-card-content.ex-card-selected {
+  outline: 2px solid #22D3EE;
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 
 .ex-card-box {
@@ -1486,19 +1516,28 @@ div[data-testid="column"]:has(.ex-card-box) div[data-testid="stButton"] button {
 }
 
 .ex-card-title {
-  font-size: 20px !important;
+  font-size: 18px !important;
   font-weight: 700;
   color: #E8ECF8;
-  margin: 10px 0 6px 0;
+  margin: 8px 0 6px 0;
   line-height: 1.3;
+  min-height: 48px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .ex-card-desc {
-  font-size: 15px !important;
-  line-height: 1.5;
+  font-size: 14px !important;
+  line-height: 1.45;
   color: #A9B3D1;
   margin-bottom: 8px;
-  flex-grow: 1;
+  min-height: 62px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Callout & Alert Boxes: 16px Radius, 16px Text */
@@ -2091,7 +2130,208 @@ st.markdown('<h2 id="scan-your-own-text" class="section-heading">Scan Your Own T
 
 if "scanner_input" not in st.session_state:
     st.session_state["scanner_input"] = POISONED_EMAIL
+    st.session_state["main_text_area"] = POISONED_EMAIL
     st.session_state["selected_example_id"] = "hijacked"
+    st.session_state["selected_example_tag"] = "attack"
+
+
+def _select_example(text: str, ex_id: str, tag: Optional[str] = None) -> None:
+    st.session_state["scanner_input"] = text
+    st.session_state["main_text_area"] = text
+    st.session_state["selected_example_id"] = ex_id
+    st.session_state["selected_example_tag"] = tag
+    st.session_state["custom_scan_result"] = None
+
+
+def _clear_custom_input() -> None:
+    st.session_state["scanner_input"] = ""
+    st.session_state["main_text_area"] = ""
+    st.session_state["selected_example_id"] = None
+    st.session_state["selected_example_tag"] = None
+    st.session_state["custom_scan_result"] = None
+
+
+def render_result_panel(
+    text: str,
+    risk: RiskLevel = RiskLevel.HIGH,
+    tool_name: str = "send email",
+    benchmark_tag: Optional[str] = None,
+    example_id: Optional[str] = None,
+    cascade_engine: Optional[Any] = None,
+    profile: str = "balanced",
+) -> Any:
+    cascade_engine = cascade_engine or get_cascade()
+    result = cascade_engine.evaluate(text)
+    policy = Policy(profile=profile)
+    decision = policy.decide(result.suspicion, risk)
+    rule_hits = result.layers[0].hits if result.layers else []
+    judge_reason = result.layers[2].reason if len(result.layers) > 2 and not result.layers[2].skipped else None
+
+    gt_badge = ""
+    if benchmark_tag == "attack":
+        if decision in (Decision.BLOCK, Decision.ASK):
+            gt_badge = '<span style="background:#0F2E1D; color:#22C55E; border:1px solid #22C55E; padding:3px 10px; border-radius:6px; font-weight:700; font-size:14px; margin-left:12px; letter-spacing:0.5px;">✓ CORRECT</span>'
+        else:
+            gt_badge = '<span style="background:#300E12; color:#F87171; border:1px solid #EF4444; padding:3px 10px; border-radius:6px; font-weight:700; font-size:14px; margin-left:12px; letter-spacing:0.5px;">✗ MISSED ATTACK</span>'
+    elif benchmark_tag in ("normal", "safe"):
+        if decision == Decision.ALLOW:
+            gt_badge = '<span style="background:#0F2E1D; color:#22C55E; border:1px solid #22C55E; padding:3px 10px; border-radius:6px; font-weight:700; font-size:14px; margin-left:12px; letter-spacing:0.5px;">✓ CORRECT</span>'
+        else:
+            gt_badge = '<span style="background:#33260A; color:#F59E0B; border:1px solid #F59E0B; padding:3px 10px; border-radius:6px; font-weight:700; font-size:14px; margin-left:12px; letter-spacing:0.5px;">⚠ FALSE ALARM</span>'
+
+    sentence = generate_verdict_sentence(
+        decision=decision,
+        suspicion=result.suspicion,
+        risk=risk,
+        tool_name=tool_name,
+        rule_hits=rule_hits,
+        judge_reason=judge_reason,
+    )
+
+    if decision == Decision.BLOCK:
+        b_class, t_class, v_icon, v_head = "verdict-banner-block", "verdict-title-block", "🛑", "BLOCKED"
+    elif decision == Decision.ASK:
+        b_class, t_class, v_icon, v_head = "verdict-banner-ask", "verdict-title-ask", "⚠️", "ASK THE USER"
+    else:
+        b_class, t_class, v_icon, v_head = "verdict-banner-allow", "verdict-title-allow", "✅", "ALLOWED"
+
+    st.markdown(
+        f"""
+        <div class="verdict-banner-box {b_class}">
+          <div class="{t_class}">{v_icon} {v_head}{gt_badge}</div>
+          <p class="verdict-body-text">{sentence}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    score_pct = int(round(result.suspicion * 100))
+    st.caption(f"Final Suspicion Score: **{score_pct}%** ({result.suspicion:.4f}) | Total Scan Latency: **{result.total_latency_ms:.1f} ms**")
+    st.progress(result.suspicion)
+
+    if example_id:
+        hn = get_honest_note(example_id, result.rules_score, result.classifier_score, result.judge_score)
+        if hn:
+            st.markdown(f'<div class="callout-amber"><strong>Honest Divergence Note:</strong> {hn}</div>', unsafe_allow_html=True)
+
+    # Three Layers Cards
+    rules_l = result.layers[0] if result.layers else None
+    rules_pct = int(round((rules_l.score if rules_l else 0.0) * 100))
+    rules_time = f"{rules_l.latency_ms:.1f} ms" if rules_l else "<1 ms"
+    chips_html = "".join([f"<span class='chip-tag'>{get_friendly_rule_label(h)}</span>" for h in (rules_l.hits if rules_l else [])]) or "<span class='layer-meta-text'>No pattern matches</span>"
+
+    clf_l = result.layers[1] if len(result.layers) > 1 else None
+    clf_pct = int(round((clf_l.score if clf_l and not clf_l.skipped else 0.0) * 100))
+    clf_time = f"{clf_l.latency_ms:.1f} ms" if clf_l and not clf_l.skipped else "—"
+    if clf_l and clf_l.skipped:
+        c_pill = "<span class='status-pill-skipped'>Skipped because an earlier layer was sure</span>"
+        c_note = "Skipped: Layer 1 was decisive (score &ge; 0.90)."
+    elif clf_l:
+        c_pill = "<span class='status-pill-checked'>Checked</span>"
+        c_note = f"Score: <strong style='color:#22D3EE;'>{clf_pct}%</strong> | Latency: <strong>{clf_time}</strong>"
+    else:
+        c_pill = "<span class='status-pill-offline'>Not run in this demo</span>"
+        c_note = "Layer disabled."
+
+    judge_l = result.layers[2] if len(result.layers) > 2 else None
+    judge_pct = int(round((judge_l.score if judge_l and not judge_l.skipped else 0.0) * 100))
+    judge_time = f"{judge_l.latency_ms / 1000:.1f} s" if (judge_l and not judge_l.skipped and judge_l.latency_ms > 0) else "—"
+    if judge_l and judge_l.skipped:
+        j_pill = "<span class='status-pill-skipped'>Skipped because an earlier layer was sure</span>"
+        j_note = "Skipped: Earlier layers were decisive, saving ~3s."
+    elif judge_l and judge_l.error and any(w in judge_l.error.lower() for w in ("disabled", "not reachable", "not run")):
+        j_pill = "<span class='status-pill-offline'>Not run in this demo</span>"
+        j_note = "Not run in this demo (precomputed for benchmark inputs; offline for custom text)."
+    elif judge_l and "precomputed" in (judge_l.reason or "").lower():
+        j_pill = "<span class='status-pill-checked' style='background:#172042; color:#22D3EE; border-color:#22D3EE;'>Precomputed</span>"
+        j_note = f"Precomputed verdict | Score: <strong style='color:#22D3EE;'>{judge_pct}%</strong>"
+    elif judge_l:
+        j_pill = "<span class='status-pill-checked'>Checked</span>"
+        j_note = f"Live Ollama | Score: <strong style='color:#22D3EE;'>{judge_pct}%</strong> | Latency: <strong>{judge_time}</strong>"
+    else:
+        j_pill = "<span class='status-pill-offline'>Not run in this demo</span>"
+        j_note = "Not invoked."
+
+    st.markdown(
+        f"""
+        <div class="layer-cards-grid">
+          <div class="layer-card-container">
+            <div>
+              <div class="layer-card-header">
+                <div class="layer-card-title-wrap">{ICON_RULES_SVG} Layer 1: Rules</div>
+                <span class="status-pill-checked">Checked</span>
+              </div>
+              <div class="layer-desc-text">Instantly scans for known attack patterns, hidden HTML comments, and base64 payloads.</div>
+              <div class="layer-meta-text">Score: <strong style="color:#22D3EE;">{rules_pct}%</strong> | Latency: <strong>{rules_time}</strong></div>
+            </div>
+            <div style="margin-top:8px;">{chips_html}</div>
+            <div class="layer-card-progress-track"><div class="layer-card-progress-fill" style="width: {rules_pct}%;"></div></div>
+          </div>
+          <div class="layer-card-container">
+            <div>
+              <div class="layer-card-header">
+                <div class="layer-card-title-wrap">{ICON_CLASSIFIER_SVG} Layer 2: ML Classifier</div>
+                {c_pill}
+              </div>
+              <div class="layer-desc-text">Statistical model trained on attack grammar to catch rephrased or multilingual variants.</div>
+              <div class="layer-meta-text">{c_note}</div>
+            </div>
+            <div class="layer-sub-text">Calibrated Logistic Regression</div>
+            <div class="layer-card-progress-track"><div class="layer-card-progress-fill" style="width: {clf_pct}%;"></div></div>
+          </div>
+          <div class="layer-card-container">
+            <div>
+              <div class="layer-card-header">
+                <div class="layer-card-title-wrap">{ICON_JUDGE_SVG} Layer 3: AI Judge</div>
+                {j_pill}
+              </div>
+              <div class="layer-desc-text">Deep reasoning LLM invoked only in the uncertain score band [0.35, 0.75] to save cost.</div>
+              <div class="layer-meta-text">{j_note}</div>
+            </div>
+            <div class="layer-sub-text">Ollama llama3.2:3b / Prompt v2</div>
+            <div class="layer-card-progress-track"><div class="layer-card-progress-fill" style="width: {judge_pct}%;"></div></div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("**Same text, different action risk:**")
+    all_dec = policy.decide_all(result.suspicion)
+    dc1, dc2, dc3 = st.columns(3)
+    for col, r_lvl in zip([dc1, dc2, dc3], RiskLevel):
+        d_val = all_dec[r_lvl]
+        with col:
+            st.markdown(f"**{r_lvl.value.upper()} RISK TOOL**")
+            if r_lvl == RiskLevel.LOW:
+                st.caption("E.g. read email, web search")
+            elif r_lvl == RiskLevel.MEDIUM:
+                st.caption("E.g. save note, draft reply")
+            else:
+                st.caption("E.g. send email, payment")
+
+            if d_val == Decision.ALLOW:
+                st.success(f"**{d_val.value}** — Proceed safely")
+            elif d_val == Decision.ASK:
+                st.warning(f"**{d_val.value}** — Confirm with user")
+            else:
+                st.error(f"**{d_val.value}** — Block immediately")
+
+    return result
+
+
+adv_judge = st.session_state.get("adv_judge_select", "precomputed")
+adv_combine = st.session_state.get("adv_combine_select", "gated")
+adv_profile = st.session_state.get("adv_profile_select", "balanced")
+adv_clf = st.session_state.get("adv_clf_enable", True)
+
+cascade_engine = get_cascade(
+    judge_name="ollama" if (ollama_available and adv_judge == "ollama (live)") else adv_judge,
+    combine=adv_combine,
+    with_clf=adv_clf,
+    profile=adv_profile,
+    is_live_ollama=ollama_available,
+)
 
 # Sub-part: Try an Example
 st.subheader("Try an Example")
@@ -2099,16 +2339,29 @@ st.caption("Click either button to see an instant precomputed demonstration:")
 
 try_col1, try_col2 = st.columns(2)
 with try_col1:
-    if st.button("Hijacked Email (Attack)", icon=":material/warning:", use_container_width=True, type="primary"):
-        st.session_state["scanner_input"] = POISONED_EMAIL
-        st.session_state["selected_example_id"] = "hijacked"
-        st.rerun()
+
+    is_hijacked = st.session_state.get("selected_example_id") == "hijacked"
+    st.button(
+        "Hijacked Email (Attack)",
+        key="btn_try_hijacked",
+        icon=":material/warning:",
+        use_container_width=True,
+        type="primary" if is_hijacked else "secondary",
+        on_click=_select_example,
+        args=(POISONED_EMAIL, "hijacked", "attack"),
+    )
 
 with try_col2:
-    if st.button("Normal Email (Safe)", icon=":material/check_circle:", use_container_width=True):
-        st.session_state["scanner_input"] = NORMAL_EMAIL
-        st.session_state["selected_example_id"] = "normal"
-        st.rerun()
+    is_normal = st.session_state.get("selected_example_id") == "normal"
+    st.button(
+        "Normal Email (Safe)",
+        key="btn_try_normal",
+        icon=":material/check_circle:",
+        use_container_width=True,
+        type="primary" if is_normal else "secondary",
+        on_click=_select_example,
+        args=(NORMAL_EMAIL, "normal", "normal"),
+    )
 
 st.markdown("---")
 
@@ -2123,63 +2376,113 @@ for row in ex_rows:
         with cols[i]:
             with st.container(border=True):
                 pill_class = "ex-pill-attack" if ex["tag"] == "attack" else "ex-pill-normal"
+                is_selected = st.session_state.get("selected_example_id") == ex["id"]
+                sel_cls = " ex-card-selected" if is_selected else ""
                 st.markdown(
                     f"""
-                    <div style="min-height: 140px; display: flex; flex-direction: column;">
+                    <div class="ex-card-content{sel_cls}">
                       <div style="margin-bottom: 8px;"><span class="{pill_class}">{ex['tag']}</span></div>
                       <div class="ex-card-title">{ex['title']}</div>
-                      <div class="ex-card-desc" style="flex-grow: 1; margin-top: 6px;">{ex['short_desc']}</div>
+                      <div class="ex-card-desc">{ex['short_desc']}</div>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
-                if st.button(
+                st.button(
                     "Load example",
                     key=f"btn_ex_{ex['id']}",
                     icon=":material/arrow_forward:",
                     use_container_width=True,
-                ):
-                    st.session_state["scanner_input"] = ex["text"]
-                    st.session_state["selected_example_id"] = ex["id"]
-                    st.rerun()
+                    on_click=_select_example,
+                    args=(ex["text"], ex["id"], ex["tag"]),
+                )
+
+# Result Panel directly under example buttons & benchmark grid
+active_result = None
+if st.session_state.get("selected_example_id"):
+    st.markdown("#### Example Analysis Result")
+    ex_id = st.session_state.get("selected_example_id")
+    ex_tag = st.session_state.get("selected_example_tag")
+    ex_text = st.session_state.get("scanner_input", "")
+    active_result = render_result_panel(
+        text=ex_text,
+        risk=RiskLevel.HIGH,
+        tool_name="send email",
+        benchmark_tag=ex_tag,
+        example_id=ex_id,
+        cascade_engine=cascade_engine,
+        profile=adv_profile,
+    )
 
 st.markdown("---")
 
 # Sub-part: Custom Text & Tool Risk
-st.subheader("Enter Your Own Text")
-user_text = st.text_area(
-    "Content to analyze (untrusted user input, email body, search snippet, or document):",
-    value=st.session_state["scanner_input"],
-    height=130,
-    key="main_text_area",
-)
+col_custom_title, col_clear = st.columns([5, 1])
+with col_custom_title:
+    st.subheader("Enter Your Own Text")
+with col_clear:
+    st.write("")
+    st.button("Clear", key="btn_clear_input", on_click=_clear_custom_input, use_container_width=True)
 
-col_tool, col_run = st.columns([2, 1])
-with col_tool:
-    tool_risk_choice = st.selectbox(
-        "Action the AI is trying to perform:",
-        [
-            "Send Email or Transfer Funds (High Risk)",
-            "Save Note or Update Draft (Medium Risk)",
-            "Read Search Results or Local Document (Low Risk)",
-        ],
-        index=0,
-        help="High-risk actions can leak secrets or modify data. Low-risk actions cannot cause external damage.",
+with st.form("custom_scan_form", clear_on_submit=False):
+    user_text = st.text_area(
+        "Content to analyze (untrusted user input, email body, search snippet, or document):",
+        height=130,
+        key="main_text_area",
     )
-    if "High" in tool_risk_choice:
-        eval_risk = RiskLevel.HIGH
-        eval_tool_name = "send email"
-    elif "Medium" in tool_risk_choice:
-        eval_risk = RiskLevel.MEDIUM
-        eval_tool_name = "save note"
-    else:
-        eval_risk = RiskLevel.LOW
-        eval_tool_name = "read data"
 
-with col_run:
-    st.write("")
-    st.write("")
-    run_scan = st.button("Scan with AgentFirewall", icon=":material/shield:", type="primary", use_container_width=True)
+    col_tool, col_run = st.columns([2, 1])
+    with col_tool:
+        tool_risk_choice = st.selectbox(
+            "Action the AI is trying to perform:",
+            [
+                "Send Email or Transfer Funds (High Risk)",
+                "Save Note or Update Draft (Medium Risk)",
+                "Read Search Results or Local Document (Low Risk)",
+            ],
+            index=0,
+            key="custom_action_risk",
+            help="High-risk actions can leak secrets or modify data. Low-risk actions cannot cause external damage.",
+        )
+        if "High" in tool_risk_choice:
+            eval_risk = RiskLevel.HIGH
+            eval_tool_name = "send email"
+        elif "Medium" in tool_risk_choice:
+            eval_risk = RiskLevel.MEDIUM
+            eval_tool_name = "save note"
+        else:
+            eval_risk = RiskLevel.LOW
+            eval_tool_name = "read data"
+
+    with col_run:
+        st.write("")
+        st.write("")
+        run_scan = st.form_submit_button("Scan with AgentFirewall", icon=":material/shield:", type="primary", use_container_width=True)
+
+if run_scan:
+    if not user_text.strip():
+        st.warning("Please enter some text to scan.")
+        st.session_state["custom_scan_result"] = None
+    else:
+        with st.spinner("Scanning with AgentFirewall..."):
+            st.session_state["custom_scan_result"] = {
+                "text": user_text,
+                "risk": eval_risk,
+                "tool_name": eval_tool_name,
+            }
+
+if st.session_state.get("custom_scan_result"):
+    st.markdown("#### Custom Scan Result")
+    csr = st.session_state["custom_scan_result"]
+    active_result = render_result_panel(
+        text=csr["text"],
+        risk=csr["risk"],
+        tool_name=csr["tool_name"],
+        benchmark_tag=None,
+        example_id=None,
+        cascade_engine=cascade_engine,
+        profile=adv_profile,
+    )
 
 # Collapsed "Advanced Settings" Expander
 with st.expander("Advanced Settings (Judge, Combine Mode, Policy Profile)", expanded=False, icon=":material/tune:"):
@@ -2188,15 +2491,14 @@ with st.expander("Advanced Settings (Judge, Combine Mode, Policy Profile)", expa
 
     with adv_col1:
         if ollama_available:
-            judge_opts = ["ollama (live)", "precomputed", "none", "mock"]
-            def_idx = 0
+            judge_opts = ["precomputed", "ollama (live)", "none", "mock"]
         else:
-            judge_opts = ["precomputed (cloud demo)", "none", "mock", "openai"]
-            def_idx = 0
+            judge_opts = ["precomputed", "none", "mock", "openai"]
         selected_judge = st.selectbox(
             "Judge Engine",
             judge_opts,
-            index=def_idx,
+            index=0,
+            key="adv_judge_select",
             help="Layer 3 LLM judge. In cloud demo mode, benchmark samples use real precomputed llama3.2:3b verdicts.",
         )
 
@@ -2205,6 +2507,7 @@ with st.expander("Advanced Settings (Judge, Combine Mode, Policy Profile)", expa
             "Combine Mode",
             ["gated", "max", "blend", "verify"],
             index=0,
+            key="adv_combine_select",
             help=(
                 "gated: fast rules/ML first; calls judge only in uncertain band [0.35, 0.75]. "
                 "max: judge can only raise suspicion. blend: weighted average. verify: judge can lower."
@@ -2216,84 +2519,14 @@ with st.expander("Advanced Settings (Judge, Combine Mode, Policy Profile)", expa
             "Policy Profile",
             ["balanced", "strict", "lenient"],
             index=0,
+            key="adv_profile_select",
             help="Thresholds for ALLOW, ASK, and BLOCK across tool danger levels.",
         )
 
-    clf_enabled = st.checkbox("Enable ML Classifier Layer", value=True)
+    clf_enabled = st.checkbox("Enable ML Classifier Layer", value=True, key="adv_clf_enable")
 
-# Scan Evaluation
-should_evaluate = run_scan or bool(user_text)
-
-cascade_engine = get_cascade(
-    judge_name="ollama" if (ollama_available and "ollama" in selected_judge) else selected_judge,
-    combine=selected_combine,
-    with_clf=clf_enabled,
-    profile=selected_profile,
-    is_live_ollama=ollama_available,
-)
-result = cascade_engine.evaluate(user_text if user_text else POISONED_EMAIL)
-policy_instance = Policy(profile=selected_profile)
-decision = policy_instance.decide(result.suspicion, eval_risk)
-
-rule_hits = result.layers[0].hits if result.layers else []
-judge_reason = result.layers[2].reason if len(result.layers) > 2 and not result.layers[2].skipped else None
-
-# Verdict Banner Display
-verdict_sentence = generate_verdict_sentence(
-    decision=decision,
-    suspicion=result.suspicion,
-    risk=eval_risk,
-    tool_name=eval_tool_name,
-    rule_hits=rule_hits,
-    judge_reason=judge_reason,
-)
-
-if decision == Decision.BLOCK:
-    banner_box_class = "verdict-banner-block"
-    title_class = "verdict-title-block"
-    verdict_icon = "🛑"
-    verdict_heading = "BLOCKED"
-elif decision == Decision.ASK:
-    banner_box_class = "verdict-banner-ask"
-    title_class = "verdict-title-ask"
-    verdict_icon = "⚠️"
-    verdict_heading = "ASK THE USER"
-else:
-    banner_box_class = "verdict-banner-allow"
-    title_class = "verdict-title-allow"
-    verdict_icon = "✅"
-    verdict_heading = "ALLOWED"
-
-st.markdown(
-    f"""
-    <div class="verdict-banner-box {banner_box_class}">
-      <div class="{title_class}">{verdict_icon} {verdict_heading}</div>
-      <p class="verdict-body-text">{verdict_sentence}</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-score_pct = int(round(result.suspicion * 100))
-st.caption(f"Final Suspicion Score: **{score_pct}%** ({result.suspicion:.4f}) | Total Scan Latency: **{result.total_latency_ms:.1f} ms**")
-st.progress(result.suspicion)
-
-# Short Honest Divergence Note
-current_ex_id = st.session_state.get("selected_example_id")
-rules_sc = result.rules_score
-clf_sc = result.classifier_score
-judge_sc = result.judge_score
-
-honest_note = get_honest_note(current_ex_id, rules_sc, clf_sc, judge_sc)
-if honest_note:
-    st.markdown(
-        f"""
-        <div class="callout-amber">
-          <strong>Honest Divergence Note:</strong> {honest_note}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+result = active_result if active_result is not None else cascade_engine.evaluate(st.session_state.get("scanner_input", POISONED_EMAIL))
+policy_instance = Policy(profile=adv_profile)
 
 # ---------------------------------------------------------------------------
 # SECTION 3: HOW IT WORKS (3-Step Strip, 3 Layers Breakdown, Danger Levels)
@@ -2692,3 +2925,10 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+
+from streamlit.runtime import exists as _runtime_exists
+
+if not _runtime_exists():
+    st._main._form_data = None
+    from streamlit.delta_generator import context_dg_stack as _ctx_dg_stack
+    _ctx_dg_stack.set(())
