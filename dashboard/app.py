@@ -55,7 +55,7 @@ LINKS: dict[str, str] = {
 # Live flags for items published or pending
 LIVE: dict[str, bool] = {
     "github": True,
-    "docs": False,
+    "docs": True,
     "pypi": False,
     "dataset": False,
 }
