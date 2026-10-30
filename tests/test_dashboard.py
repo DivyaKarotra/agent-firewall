@@ -304,4 +304,53 @@ def test_no_placeholder_strings_remain():
             assert placeholder not in content, f"Found forbidden placeholder '{placeholder}' in {rel_path}"
 
 
+def test_no_st_tabs_usage():
+    """Verify that st.tabs is not used in dashboard/app.py for single-page scrolling layout."""
+    app_path = Path(__file__).parent.parent / "dashboard" / "app.py"
+    content = app_path.read_text(encoding="utf-8")
+    assert "st.tabs(" not in content, "Found forbidden st.tabs usage in dashboard/app.py"
+
+
+def test_nav_labels_equal_section_heading_texts():
+    """Verify that nav labels match exact section heading texts and targets."""
+    app_path = Path(__file__).parent.parent / "dashboard" / "app.py"
+    content = app_path.read_text(encoding="utf-8")
+    expected_nav = [
+        ("Live Demo", "live-demo"),
+        ("Scan Your Own Text", "scan-your-own-text"),
+        ("How It Works", "how-it-works"),
+        ("Why Layers?", "why-layers"),
+        ("Benchmarks", "benchmarks"),
+    ]
+    for label, target_id in expected_nav:
+        assert f'href="#{target_id}"' in content, f"Missing href target '#{target_id}'"
+        pattern = rf'<h2\s+id="{re.escape(target_id)}"[^>]*>{re.escape(label)}</h2>'
+        assert re.search(pattern, content), f"Section heading for '{label}' with id='{target_id}' not found"
+
+
+def test_popover_css_has_opaque_background():
+    """Verify that BaseWeb popovers, menus and listboxes have solid opaque dark background and high z-index."""
+    assert 'div[data-baseweb="popover"]' in CSS_STYLING
+    assert "background-color: #121A33" in CSS_STYLING
+    assert "opacity: 1" in CSS_STYLING
+    assert "z-index: 999999" in CSS_STYLING
+
+
+def test_no_raw_icon_ligature_strings_in_dashboard_source():
+    """Verify that CSS protects Material icons and no raw ligature text is left in button labels."""
+    app_path = Path(__file__).parent.parent / "dashboard" / "app.py"
+    content = app_path.read_text(encoding="utf-8")
+
+    # Verify CSS preserves icon font
+    assert '[data-testid="stIconMaterial"]' in CSS_STYLING
+    assert "Material Symbols Rounded" in CSS_STYLING
+
+    # Verify button labels use Streamlit icon= syntax and not raw ligature or emoji prefixes
+    button_calls = re.findall(r'st\.button\(([^)]+)\)', content)
+    for call in button_calls:
+        assert "_arrow" not in call
+        assert "arrow_right" not in call
+        assert "keyboard_" not in call
+
+
 

