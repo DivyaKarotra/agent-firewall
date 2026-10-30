@@ -193,3 +193,35 @@ def test_layout_and_responsive_css():
     assert cta_primary, "Expected .hero-cta-primary CSS rule"
     assert "text-decoration: underline" not in cta_primary.group(1), ".hero-cta-primary must not have underline by default"
 
+
+def test_css_font_sizes_not_below_14px():
+    """Verify that all CSS font-size values in CSS_STYLING are >= 14px."""
+    matches = re.findall(r"font-size:\s*([^;!}\n]+)", CSS_STYLING)
+    assert len(matches) > 0, "No font-size rules found in CSS_STYLING"
+
+    for val_str in matches:
+        val = val_str.strip()
+        # Handle clamp(min, pref, max)
+        clamp_match = re.search(r"clamp\(\s*([\d.]+)(px|rem)", val)
+        if clamp_match:
+            num = float(clamp_match.group(1))
+            unit = clamp_match.group(2)
+            px = num * 16 if unit == "rem" else num
+            assert px >= 14.0, f"Found clamp min font-size below 14px: {val}"
+            continue
+
+        # Handle px
+        px_match = re.search(r"([\d.]+)\s*px", val)
+        if px_match:
+            px = float(px_match.group(1))
+            assert px >= 14.0, f"Found font-size below 14px: {val}"
+            continue
+
+        # Handle rem
+        rem_match = re.search(r"([\d.]+)\s*rem", val)
+        if rem_match:
+            px = float(rem_match.group(1)) * 16
+            assert px >= 14.0, f"Found rem font-size below 14px ({px}px): {val}"
+            continue
+
+
