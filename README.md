@@ -44,7 +44,7 @@ An LLM judge is invoked only within an uncertain score band, saving latency and 
 ### 1. Install `agent-firewall-cascade`
 
 ```powershell
-pip install agent-firewall-cascade
+pip install "agent-firewall-cascade[ml]"
 ```
 
 The PyPI package is agent-firewall-cascade; you import it as agent_firewall.

@@ -57,7 +57,7 @@ LINKS: dict[str, str] = {
 LIVE: dict[str, bool] = {
     "github": True,
     "docs": True,
-    "pypi": False,
+    "pypi": True,
     "dataset": False,
 }
 

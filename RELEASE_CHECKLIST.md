@@ -32,7 +32,7 @@ git push -u origin main
 
 ---
 
-## 3. Publish to PyPI (via Trusted Publishing or Token)
+## 3. Publish to PyPI (via Trusted Publishing or Token) - [x] Completed (live on PyPI as `agent-firewall-cascade` 0.1.0)
 
 ### Option A: Trusted Publishing via GitHub Actions (Recommended)
 1. Go to [pypi.org/manage/account/publishing/](https://pypi.org/manage/account/publishing/).
