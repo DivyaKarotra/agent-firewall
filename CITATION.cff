@@ -3,7 +3,7 @@ message: "If you use this software or benchmark dataset in your research, please
 authors:
   - name: "Divya Karotra"
 title: "agent-firewall-cascade: A Risk-Aware Cascade Firewall for LLM Agent Tool Calls"
-version: 0.1.0
+version: 0.1.1
 date-released: 2026-10-25
 url: "https://github.com/DivyaKarotra/agent-firewall"
 license: MIT

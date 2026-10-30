@@ -12,11 +12,11 @@ Instead of a binary allow/block, it evaluates tool risk to decide: ALLOW, ASK, o
 Fast rules (<1 ms) and calibrated ML (<20 ms) resolve decisive cases immediately.
 An LLM judge is invoked only within an uncertain score band, saving latency and API cost.
 
-![agent-firewall Hero](docs/img/dashboard_hero.png)
+![agent-firewall Hero](https://raw.githubusercontent.com/DivyaKarotra/agent-firewall/main/docs/img/dashboard_hero.png)
 
 | Poisoned Email Blocked | Normal Email Allowed |
 | :---: | :---: |
-| ![Poisoned Email Blocked](docs/img/dashboard_poisoned_blocked.png) | ![Normal Email Allowed](docs/img/dashboard_normal_allowed.png) |
+| ![Poisoned Email Blocked](https://raw.githubusercontent.com/DivyaKarotra/agent-firewall/main/docs/img/dashboard_poisoned_blocked.png) | ![Normal Email Allowed](https://raw.githubusercontent.com/DivyaKarotra/agent-firewall/main/docs/img/dashboard_normal_allowed.png) |
 
 ```
                          ┌─────────────────────────────────────────────────────────┐
@@ -279,4 +279,4 @@ python -m twine check dist/*
 
 ## License
 
-MIT License — see [LICENSE](LICENSE).
+MIT License — see [LICENSE](https://github.com/DivyaKarotra/agent-firewall/blob/main/LICENSE).

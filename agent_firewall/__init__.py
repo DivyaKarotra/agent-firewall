@@ -1,6 +1,6 @@
 """agent-firewall: a risk-aware firewall for LLM agent tool calls."""
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from agent_firewall.cascade import Cascade, CascadeResult, LayerScore
 from agent_firewall.classifier import Classifier, is_available, load_data
