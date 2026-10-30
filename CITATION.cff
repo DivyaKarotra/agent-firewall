@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software or benchmark dataset in your research, please cite it as below."
 authors:
   - name: "Divya Karotra"
-title: "agent-firewall: A Risk-Aware Cascade Firewall for LLM Agent Tool Calls"
+title: "agent-firewall-cascade: A Risk-Aware Cascade Firewall for LLM Agent Tool Calls"
 version: 0.1.0
 date-released: 2026-10-25
 url: "https://github.com/DivyaKarotra/agent-firewall"

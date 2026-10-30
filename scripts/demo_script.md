@@ -78,4 +78,4 @@ pytest -v -k "test_firewall"
 ```
 
 **Closing remarks:**
-> *"agent-firewall is 100% open source under the MIT license, with zero required runtime dependencies for the core library. Try it with `pip install agent-firewall` today."*
+> *"agent-firewall is 100% open source under the MIT license, with zero required runtime dependencies for the core library. Try it with `pip install agent-firewall-cascade` today."*

@@ -159,7 +159,7 @@ class Cascade:
             clf_reason = (
                 "Not configured"
                 if has_sklearn
-                else "classifier layer needs: pip install agent-firewall[ml]"
+                else "classifier layer needs: pip install agent-firewall-cascade[ml]"
             )
             layers.append(LayerScore(
                 name="classifier",

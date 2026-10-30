@@ -15,7 +15,7 @@ Three tailored versions highlighting distinct technical angles for specialized r
 
 ### Version 2: Senior Software & Backend Infrastructure Engineer
 
-- **Designed and published `agent-firewall` on PyPI** (`pip install agent-firewall`), an open-source security middleware for AI agents featuring zero external runtime dependencies in core components.
+- **Designed and published `agent-firewall-cascade` on PyPI** (`pip install agent-firewall-cascade`), an open-source security middleware for AI agents featuring zero external runtime dependencies in core components.
 - **Engineered `Warden` middleware wrapper** to intercept untrusted I/O, maintain thread-safe monotonic session taint tracking, and enforce action-aware risk policies (`ALLOW`, `ASK`, `BLOCK`) before sensitive tool execution.
 - **Built an interactive full-stack security dashboard** using Streamlit to visualize layer-by-layer latency, rule activations, and policy thresholds under simulated attack scenarios.
 - **Created a production-ready CI/CD and release pipeline** including strict Ruff linting, 89-test Pytest coverage, automated MkDocs documentation deployment, and reproducible packaging with PEP 561 type hints.

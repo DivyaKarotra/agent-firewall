@@ -37,7 +37,7 @@ class Classifier:
         if not _HAS_SKLEARN:
             raise ImportError(
                 "scikit-learn is required for the classifier. "
-                "Install it with: pip install agent-firewall[ml]"
+                "Install it with: pip install agent-firewall-cascade[ml]"
             )
         self._pipeline: Optional[Pipeline] = None
 

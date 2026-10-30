@@ -21,7 +21,7 @@ Key Engineering Innovations:
 🔹 **Zero Runtime Dependencies:** The core library runs entirely on standard Python 3.11+ library. ML and Streamlit dashboard are completely optional extras.
 🔹 **Honest & Reproducible Benchmarks:** Wilson 95% confidence intervals, zero number drift, and fully documented failure modes.
 
-📦 PyPI: `pip install agent-firewall`
+📦 PyPI: `pip install agent-firewall-cascade`
 💻 GitHub: https://github.com/DivyaKarotra/agent-firewall
 📖 Documentation: https://DivyaKarotra.github.io/agent-firewall/
 ✍️ Deep-dive blog post: https://github.com/DivyaKarotra/agent-firewall/blob/main/publish/blog_post.md

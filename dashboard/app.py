@@ -47,7 +47,7 @@ LINKS: dict[str, str] = {
     "github_repo": "https://github.com/DivyaKarotra/agent-firewall",
     "issues": "https://github.com/DivyaKarotra/agent-firewall/issues",
     "docs": "https://DivyaKarotra.github.io/agent-firewall/",
-    "pypi": "https://pypi.org/project/agent-firewall/",
+    "pypi": "https://pypi.org/project/agent-firewall-cascade/",
     "dataset": "https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark",
     "author_profile": "https://github.com/DivyaKarotra",
     "license": "https://github.com/DivyaKarotra/agent-firewall/blob/main/LICENSE",
@@ -2933,7 +2933,7 @@ else:
     res_docs_html = '<li><span class="footer-link-disabled">Documentation Site (Coming Soon)</span></li>'
 
 if LIVE["pypi"]:
-    res_pypi_html = f'<li><a href="{LINKS["pypi"]}" target="_blank" rel="noopener noreferrer">PyPI Package (agent-firewall)</a></li>'
+    res_pypi_html = f'<li><a href="{LINKS["pypi"]}" target="_blank" rel="noopener noreferrer">PyPI Package (agent-firewall-cascade)</a></li>'
 else:
     res_pypi_html = '<li><span class="footer-link-disabled">PyPI Package (Coming Soon)</span></li>'
 

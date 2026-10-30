@@ -1,8 +1,8 @@
 # agent-firewall
 
 [![CI](https://github.com/DivyaKarotra/agent-firewall/actions/workflows/ci.yml/badge.svg)](https://github.com/DivyaKarotra/agent-firewall/actions)
-[![PyPI version](https://img.shields.io/pypi/v/agent-firewall.svg)](https://pypi.org/project/agent-firewall/)
-[![Python versions](https://img.shields.io/pypi/pyversions/agent-firewall.svg)](https://pypi.org/project/agent-firewall/)
+[![PyPI version](https://img.shields.io/pypi/v/agent-firewall-cascade.svg)](https://pypi.org/project/agent-firewall-cascade/)
+[![Python versions](https://img.shields.io/pypi/pyversions/agent-firewall-cascade.svg)](https://pypi.org/project/agent-firewall-cascade/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://DivyaKarotra.github.io/agent-firewall/)
 
@@ -41,15 +41,17 @@ An LLM judge is invoked only within an uncertain score band, saving latency and 
 
 ## Quick Start for Windows (with Ollama)
 
-### 1. Install `agent-firewall`
+### 1. Install `agent-firewall-cascade`
 
 ```powershell
-pip install agent-firewall
+pip install agent-firewall-cascade
 ```
+
+The PyPI package is agent-firewall-cascade; you import it as agent_firewall.
 
 For the machine-learning classifier and local web dashboard:
 ```powershell
-pip install "agent-firewall[ml,dashboard]"
+pip install "agent-firewall-cascade[ml,dashboard]"
 ```
 
 ### 2. Set Up Local LLM Judge (Ollama on Windows)
@@ -259,6 +261,10 @@ Empirically measured vulnerabilities, failure modes, and architectural boundarie
 - [ ] Exportable pre-trained ONNX models for sub-5ms ML inference.
 
 ---
+
+## Related Work
+
+A different project named agentfirewall (https://pypi.org/project/agentfirewall/) also exists; this project's focus is a three-layer cascade with an action-aware policy and a public benchmark.
 
 ## Development & Testing
 

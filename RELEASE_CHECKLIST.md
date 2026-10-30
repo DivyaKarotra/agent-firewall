@@ -37,7 +37,7 @@ git push -u origin main
 ### Option A: Trusted Publishing via GitHub Actions (Recommended)
 1. Go to [pypi.org/manage/account/publishing/](https://pypi.org/manage/account/publishing/).
 2. Add a new pending publisher:
-   - PyPI Project Name: `agent-firewall`
+   - PyPI Project Name: `agent-firewall-cascade`
    - Owner: `DivyaKarotra`
    - Repository name: `agent-firewall`
    - Workflow name: `release.yml`

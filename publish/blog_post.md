@@ -74,4 +74,4 @@ The library is 100% open source under the MIT license, with zero required runtim
 
 - **GitHub Repository:** [https://github.com/DivyaKarotra/agent-firewall](https://github.com/DivyaKarotra/agent-firewall)
 - **Documentation:** [https://DivyaKarotra.github.io/agent-firewall/](https://DivyaKarotra.github.io/agent-firewall/)
-- **Install:** `pip install agent-firewall`
+- **Install:** `pip install agent-firewall-cascade`

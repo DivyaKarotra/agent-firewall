@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-firewall"
+name = "agent-firewall-cascade"
 version = "0.1.0"
 description = "A risk-aware firewall for LLM agent tool calls (prompt-injection defence)"
 readme = "README.md"
