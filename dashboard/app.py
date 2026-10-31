@@ -58,7 +58,7 @@ LIVE: dict[str, bool] = {
     "github": True,
     "docs": True,
     "pypi": True,
-    "dataset": False,
+    "dataset": True,
 }
 
 # Compatibility aliases

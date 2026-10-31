@@ -64,7 +64,9 @@ python -m twine upload dist/*
 
 ---
 
-## 4. Upload Dataset to Hugging Face Hub
+## 4. Upload Dataset to Hugging Face Hub - [x] Completed (live on Hugging Face as DivyaKarotra/agent-firewall-benchmark)
+
+Live at: https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark
 
 ```bash
 # 4.1 Prepare the formatted dataset directory

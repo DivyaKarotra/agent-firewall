@@ -24,6 +24,7 @@ Key Engineering Innovations:
 📦 PyPI: `pip install agent-firewall-cascade`
 💻 GitHub: https://github.com/DivyaKarotra/agent-firewall
 📖 Documentation: https://DivyaKarotra.github.io/agent-firewall/
+🤗 Dataset: https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark
 ✍️ Deep-dive blog post: https://github.com/DivyaKarotra/agent-firewall/blob/main/publish/blog_post.md
 
 Would love your thoughts, feedback, and contributions!

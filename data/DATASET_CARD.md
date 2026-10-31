@@ -34,6 +34,7 @@ task_ids: []
 ## Dataset Description
 
 - **Repository:** [agent-firewall on GitHub](https://github.com/DivyaKarotra/agent-firewall)
+- **Hugging Face Dataset:** [DivyaKarotra/agent-firewall-benchmark](https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark)
 - **Paper / Documentation:** [Documentation](https://DivyaKarotra.github.io/agent-firewall/)
 - **License:** MIT
 - **Task:** Prompt-injection detection and risk-aware policy decisions for LLM agent tool calls

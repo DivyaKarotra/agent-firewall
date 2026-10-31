@@ -6,6 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://DivyaKarotra.github.io/agent-firewall/)
 
+Dataset: https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark
+
 A risk-aware firewall for LLM agent tool calls that prevents prompt injection attacks.
 It intercepts untrusted content (emails, web pages, documents) before the agent acts on it.
 Instead of a binary allow/block, it evaluates tool risk to decide: ALLOW, ASK, or BLOCK.

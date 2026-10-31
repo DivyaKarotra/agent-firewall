@@ -6,6 +6,8 @@ title: "agent-firewall-cascade: A Risk-Aware Cascade Firewall for LLM Agent Tool
 version: 0.1.1
 date-released: 2026-10-25
 url: "https://github.com/DivyaKarotra/agent-firewall"
+repository-code: "https://github.com/DivyaKarotra/agent-firewall"
+repository-artifact: "https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark"
 license: MIT
 keywords:
   - prompt-injection

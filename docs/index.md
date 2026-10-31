@@ -24,3 +24,7 @@ untrusted content (emails, web pages, documents), the firewall scans it for
 prompt injection and decides whether subsequent tool calls should be
 ALLOWED, require human confirmation (ASK), or be BLOCKED — based on both
 how suspicious the content is and how risky the requested tool is.
+
+## Benchmark Dataset
+
+The benchmark dataset is available on Hugging Face: [DivyaKarotra/agent-firewall-benchmark](https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark).

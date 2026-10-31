@@ -15,6 +15,8 @@ python benchmark.py --judge ollama --model llama3.2:3b --split fresh
 python benchmark.py --judge mock --split test
 ```
 
+The benchmark dataset is available on Hugging Face: [DivyaKarotra/agent-firewall-benchmark](https://huggingface.co/datasets/DivyaKarotra/agent-firewall-benchmark).
+
 Results are saved to `results/ablation_<split>_<judge>_<prompt>.md` and canonical aliases.
 
 ---
