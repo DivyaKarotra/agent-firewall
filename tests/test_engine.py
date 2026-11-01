@@ -8,8 +8,6 @@ import pytest
 
 from agent_firewall.policy import Decision, RiskLevel
 from dashboard.engine import (
-    FRIENDLY_RULE_LABELS,
-    Trace,
     build_cascade,
     build_precomputed_map,
     generate_verdict_sentence,

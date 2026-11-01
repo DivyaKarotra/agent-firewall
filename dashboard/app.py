@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import html
 import sys
-import urllib.request
 from pathlib import Path
 from typing import Any, Optional
 
@@ -32,7 +32,7 @@ st.set_page_config(
 )
 
 from agent_firewall.cascade import Cascade
-from agent_firewall.judge import BaseJudge, JudgeResult, make_judge
+from agent_firewall.judge import make_judge
 from agent_firewall.policy import Decision, Policy, RiskLevel
 
 # ---------------------------------------------------------------------------
@@ -208,24 +208,24 @@ HERO_ILLUSTRATION_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
 # Engine & Examples Imports (Re-exported for backward compatibility)
 # ---------------------------------------------------------------------------
 from dashboard.engine import (
-    FRIENDLY_RULE_LABELS,
+    FRIENDLY_RULE_LABELS as FRIENDLY_RULE_LABELS,
+)
+from dashboard.engine import (
     PROFILE_HELP,
     CloudDemoJudge,
     Trace,
     check_ollama_reachable,
     generate_verdict_sentence,
-    get_friendly_rule_label,
     get_honest_note,
     scan,
 )
+from dashboard.engine import (
+    get_friendly_rule_label as get_friendly_rule_label,
+)
 from dashboard.examples import (
-    BENCHMARK_EXAMPLES,
-    DEMO_EMAILS,
     EXAMPLES,
     NORMAL_EMAIL,
-    NORMAL_EMAIL_VERDICT,
     POISONED_EMAIL,
-    POISONED_EMAIL_VERDICT,
     PRECOMPUTED_MAP,
 )
 
@@ -1093,59 +1093,187 @@ a:focus-visible {
   transition: width 0.3s ease;
 }
 
-/* Example Cards: Equal Height by Construction */
-div[data-testid="column"] div[data-testid="stVerticalBlockBorderWrapper"]:has(.ex-card-selected) {
+.strip-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #22D3EE !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  margin-top: 12px;
+  transition: gap 0.15s ease;
+}
+
+.strip-link:hover, .strip-link:focus {
+  text-decoration: underline !important;
+  gap: 8px;
+}
+
+/* Live Demo Read-Only Styled Email Box */
+.email-preview-box {
+  background-color: #121A33;
+  border: 1px solid #263261;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 12px 0 24px 0;
+}
+
+.email-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #263261;
+}
+
+.email-preview-badge {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+.email-preview-badge-attack {
+  background: #300E12;
+  color: #F87171;
+  border: 1px solid #EF4444;
+}
+
+.email-preview-badge-normal {
+  background: #0F2E1D;
+  color: #22C55E;
+  border: 1px solid #22C55E;
+}
+
+.email-preview-subject {
+  font-size: 15px !important;
+  color: #A9B3D1;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.email-preview-body {
+  color: #E8ECF8 !important;
+  opacity: 1 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  margin: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Master-Detail Workspace Grid (Screens >= 1100px: 46% / 54%) */
+@media (min-width: 1100px) {
+  div.st-key-workspace_container > div[data-testid="stVerticalBlock"],
+  div[class*="st-key-workspace_container"] > div[data-testid="stVerticalBlock"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 46%) minmax(0, 54%) !important;
+    grid-template-areas:
+      "samples result"
+      "custom  result" !important;
+    gap: 28px !important;
+    align-items: start !important;
+  }
+
+  div[class*="st-key-workspace_samples"] {
+    grid-area: samples !important;
+    min-width: 0 !important;
+  }
+
+  div[class*="st-key-workspace_result"] {
+    grid-area: result !important;
+    min-width: 0 !important;
+    position: sticky !important;
+    top: 96px !important;
+    align-self: start !important;
+  }
+
+  div[class*="st-key-workspace_custom"] {
+    grid-area: custom !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Master-Detail Workspace Stacked Layout (Screens < 1100px) */
+@media (max-width: 1099px) {
+  div.st-key-workspace_container > div[data-testid="stVerticalBlock"],
+  div[class*="st-key-workspace_container"] > div[data-testid="stVerticalBlock"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+
+  div[class*="st-key-workspace_samples"] {
+    order: 1 !important;
+    width: 100% !important;
+  }
+
+  div[class*="st-key-workspace_result"] {
+    order: 2 !important;
+    width: 100% !important;
+    position: static !important;
+  }
+
+  div[class*="st-key-workspace_custom"] {
+    order: 3 !important;
+    width: 100% !important;
+  }
+}
+
+/* Benchmark Sample Cards: Container-wrapped, Equal Height by Construction */
+div[class*="st-key-card_"] {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+div[class*="st-key-card_"] > div[data-testid="stVerticalBlockBorderWrapper"],
+div[class*="st-key-card_"] > div {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  padding: 16px !important;
+  border-radius: 16px !important;
+  border: 1px solid #263261 !important;
+  background-color: #172042 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+div[class*="st-key-card_"]:hover > div[data-testid="stVerticalBlockBorderWrapper"],
+div[class*="st-key-card_"]:hover > div {
   border-color: #22D3EE !important;
+}
+
+/* Selected container state: cyan border + subtle cyan glow */
+div[class*="st-key-card_"]:has(.sample-card-selected) > div[data-testid="stVerticalBlockBorderWrapper"],
+div[class*="st-key-card_"]:has(.sample-card-selected) > div,
+div[class*="st-key-card_"]:has(.sample-card-selected),
+div[data-testid="stVerticalBlockBorderWrapper"]:has(.sample-card-selected) {
+  border: 1px solid #22D3EE !important;
   box-shadow: 0 0 16px rgba(34, 211, 238, 0.35) !important;
 }
 
-.ex-card-tag-row {
+.sample-card-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.sample-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   height: 28px;
-  line-height: 28px;
   margin-bottom: 8px;
-}
-
-.ex-card-content {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-}
-
-.ex-card-content.ex-card-selected {
-  outline: 2px solid #22D3EE;
-  outline-offset: 4px;
-  border-radius: 8px;
-}
-
-.ex-card-box {
-  padding: 20px;
-  background: #172042;
-  border: 1px solid #263261;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex: 1 1 auto;
-  min-height: 175px;
-  margin-bottom: 12px;
-  transition: transform 0.15s ease, border-color 0.15s ease;
-  width: 100%;
-}
-
-.ex-card-box:hover {
-  transform: translateY(-2px);
-  border-color: #22D3EE;
-}
-
-div[data-testid="column"]:has(.ex-card-box) div[data-testid="stButton"] {
-  margin-top: auto !important;
-  width: 100% !important;
-}
-
-div[data-testid="column"]:has(.ex-card-box) div[data-testid="stButton"] button {
-  width: 100% !important;
-  font-size: 15px !important;
 }
 
 .ex-pill-attack {
@@ -1155,7 +1283,7 @@ div[data-testid="column"]:has(.ex-card-box) div[data-testid="stButton"] button {
   border: 1px solid #EF4444;
   font-size: 14px !important;
   font-weight: 700 !important;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 6px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -1168,35 +1296,128 @@ div[data-testid="column"]:has(.ex-card-box) div[data-testid="stButton"] button {
   border: 1px solid #22C55E;
   font-size: 14px !important;
   font-weight: 700 !important;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 6px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-.ex-card-title {
-  font-size: 18px !important;
-  font-weight: 700;
-  color: #E8ECF8;
-  margin: 0 0 6px 0;
-  line-height: 24px;
-  height: 48px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.ex-pill-selected {
+  display: inline-block;
+  background: #163B48;
+  color: #22D3EE;
+  border: 1px solid #22D3EE;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.ex-card-desc {
+.sample-card-title {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #E8ECF8 !important;
+  line-height: 22px !important;
+  height: 44px !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  margin-bottom: 8px !important;
+}
+
+.sample-card-desc {
   font-size: 14px !important;
-  line-height: 20px;
+  line-height: 20px !important;
+  color: #A9B3D1 !important;
+  height: 60px !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  margin-bottom: 12px !important;
+}
+
+div[class*="st-key-card_"] div[data-testid="stButton"] {
+  margin-top: auto !important;
+  width: 100% !important;
+}
+
+div[class*="st-key-card_"] div[data-testid="stButton"] button {
+  width: 100% !important;
+  font-size: 15px !important;
+  height: 44px !important;
+}
+
+/* Empty State Card */
+.empty-state-card {
+  padding: 48px 32px;
+  background: #172042;
+  border: 1px dashed #263261;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  margin-top: 12px;
+}
+
+.empty-state-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.empty-state-title {
+  font-size: 20px !important;
+  font-weight: 700;
+  color: #E8ECF8;
+  margin-bottom: 8px;
+}
+
+.empty-state-desc {
+  font-size: 15px !important;
   color: #A9B3D1;
-  margin: 0 0 12px 0;
-  height: 60px;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  max-width: 440px;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+
+/* Ground Truth Badges */
+.badge-correct {
+  background: #0F2E1D;
+  color: #22C55E;
+  border: 1px solid #22C55E;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  margin-left: 12px;
+  letter-spacing: 0.5px;
+}
+
+.badge-missed {
+  background: #300E12;
+  color: #F87171;
+  border: 1px solid #EF4444;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  margin-left: 12px;
+  letter-spacing: 0.5px;
+}
+
+.badge-false-alarm {
+  background: #33260A;
+  color: #F59E0B;
+  border: 1px solid #F59E0B;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  margin-left: 12px;
+  letter-spacing: 0.5px;
 }
 
 /* Callout & Alert Boxes: 16px Radius, 16px Text */
@@ -1504,10 +1725,8 @@ st.markdown(CSS_STYLING, unsafe_allow_html=True)
 # ---------------------------------------------------------------------------
 if LIVE["docs"]:
     docs_nav_item = f'<a href="{LINKS["docs"]}" target="_blank" rel="noopener noreferrer" class="nav-link-item">Docs</a>'
-    hero_docs_btn = f'<a href="{LINKS["docs"]}" target="_blank" rel="noopener noreferrer" class="hero-cta-btn hero-cta-secondary">Read the docs &rarr;</a>'
 else:
     docs_nav_item = '<span class="nav-link-item nav-link-disabled" title="Documentation site deploying soon">Docs <span class="nav-soon-pill">Soon</span></span>'
-    hero_docs_btn = '<span class="hero-cta-btn hero-cta-secondary nav-link-disabled">Read the docs (Coming Soon)</span>'
 
 if LIVE["github"]:
     header_gh_btn = f'<a href="{LINKS["github_repo"]}" target="_blank" rel="noopener noreferrer" class="nav-github-btn">GitHub</a>'
@@ -1522,8 +1741,8 @@ st.markdown(
     <span class="brand-wordmark"><span class="brand-gradient-text">AgentFirewall</span></span>
   </div>
   <nav class="nav-links-cluster" aria-label="Main Navigation">
-    <a href="#live-demo" target="_self" class="nav-link-item">Live Demo</a>
     <a href="#who-its-for" target="_self" class="nav-link-item">Who It's For</a>
+    <a href="#live-demo" target="_self" class="nav-link-item">Live Demo</a>
     <a href="#scan-your-own-text" target="_self" class="nav-link-item">Scan Your Own Text</a>
     <a href="#how-it-works" target="_self" class="nav-link-item">How It Works</a>
     <a href="#why-layers" target="_self" class="nav-link-item">Why Layers?</a>
@@ -1555,7 +1774,6 @@ st.markdown(
       </p>
       <div class="hero-btn-row">
         <a href="#live-demo" target="_self" class="hero-cta-btn hero-cta-primary">Try the live demo &darr;</a>
-        {hero_docs_btn}
       </div>
       <div class="hero-chips-row">
         <div class="hero-stat-chip"><strong>{stats_data.get('rules_classifier_catch', '83.9%')}</strong> attacks caught</div>
@@ -1605,7 +1823,7 @@ NAV_SCROLL_SCRIPT = """
       });
     });
 
-    var sectionIds = ['live-demo', 'who-its-for', 'scan-your-own-text', 'how-it-works', 'why-layers', 'benchmarks'];
+    var sectionIds = ['who-its-for', 'live-demo', 'scan-your-own-text', 'how-it-works', 'why-layers', 'benchmarks'];
     var sections = sectionIds.map(function(id) { return pDoc.getElementById(id); }).filter(Boolean);
 
     function onScroll() {
@@ -1654,8 +1872,43 @@ ollama_available = check_ollama_reachable()
 query_demo = st.query_params.get("demo", "")
 
 # ---------------------------------------------------------------------------
-# SECTION 1: LIVE DEMO (Unprotected vs Protected Story Comparison)
+# SECTION 1: WHO IT'S FOR
 # ---------------------------------------------------------------------------
+st.markdown("---")
+st.markdown("""<h2 id="who-its-for" class="section-heading">Who It's For</h2>""", unsafe_allow_html=True)
+st.markdown(
+    """
+<div class="strip-container">
+  <div class="strip-card">
+    <div class="strip-card-top">
+      <span class="strip-title">Agent Developers</span>
+    </div>
+    <p class="strip-desc">Drop-in defense for LangChain, LlamaIndex, or custom agents.<br>Protect tool calls with a single line of Python code.</p>
+    <a href="#how-it-works" target="_self" class="strip-link">See integration &rarr;</a>
+  </div>
+  <div class="strip-card">
+    <div class="strip-card-top">
+      <span class="strip-title">Security &amp; Red-Team Engineers</span>
+    </div>
+    <p class="strip-desc">Calibrated risk thresholds with zero false alarms on safe text.<br>Full detection trace with latency and score breakdown per layer.</p>
+    <a href="#why-layers" target="_self" class="strip-link">Explore defense layers &rarr;</a>
+  </div>
+  <div class="strip-card">
+    <div class="strip-card-top">
+      <span class="strip-title">Researchers &amp; Reviewers</span>
+    </div>
+    <p class="strip-desc">Reproducible 115-sample benchmark across 10 attack classes.<br>Complete ablation data for rules, ML classifier, and LLM judge.</p>
+    <a href="#benchmarks" target="_self" class="strip-link">View benchmark results &rarr;</a>
+  </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------------------------
+# SECTION 2: LIVE DEMO (Without Firewall vs With AgentFirewall)
+# ---------------------------------------------------------------------------
+st.markdown("---")
 st.markdown('<h2 id="live-demo" class="section-heading">Live Demo</h2>', unsafe_allow_html=True)
 st.markdown(
     "Compare what happens when an AI assistant receives an email containing a hidden injection attack."
@@ -1663,27 +1916,37 @@ st.markdown(
 
 story_choice = st.radio(
     "Select simulated incoming email:",
-    ["Poisoned Email (contains hidden injection)", "Normal Email (benign workplace note)"],
+    ["Poisoned Email", "Normal Email"],
     index=1 if query_demo == "normal" else 0,
     horizontal=True,
     key="story_radio",
 )
 
-active_email = POISONED_EMAIL if "Poisoned" in story_choice else NORMAL_EMAIL
 is_attack = "Poisoned" in story_choice
+active_email = POISONED_EMAIL if is_attack else NORMAL_EMAIL
 
-st.text_area(
-    "Incoming simulated email text:",
-    value=active_email,
-    height=120,
-    disabled=True,
-    key="story_preview",
+badge_class = "email-preview-badge-attack" if is_attack else "email-preview-badge-normal"
+badge_text = "Hidden Injection" if is_attack else "Benign Message"
+subject_text = "Subject: Urgent: Q3 Financial Review" if is_attack else "Subject: Lunch today?"
+escaped_email = html.escape(active_email)
+
+st.markdown(
+    f"""
+    <div class="email-preview-box">
+      <div class="email-preview-header">
+        <span class="email-preview-badge {badge_class}">{badge_text}</span>
+        <span class="email-preview-subject">{subject_text}</span>
+      </div>
+      <pre class="email-preview-body">{escaped_email}</pre>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 col_unprot, col_prot = st.columns(2)
 
 with col_unprot:
-    st.markdown("### ❌ Unprotected Agent")
+    st.markdown("### ❌ Without Firewall")
     st.caption("Standard agent with no firewall: parses and obeys text blindly.")
 
     if is_attack:
@@ -1710,7 +1973,7 @@ with col_unprot:
         )
 
 with col_prot:
-    st.markdown("### 🛡️ Protected Agent (AgentFirewall)")
+    st.markdown("### 🛡️ With AgentFirewall")
     st.caption("Risk-aware firewall: scans input before any tool is invoked.")
 
     cascade_obj = get_cascade(
@@ -1735,7 +1998,7 @@ with col_prot:
         st.markdown(
             f"""
             <div class="verdict-banner-box verdict-banner-block">
-              <div class="verdict-title-block">🛑 {dec.value}: TOOL EXECUTION HALTED</div>
+              <div class="verdict-title-block">🛑 BLOCKED: TOOL EXECUTION HALTED</div>
               <p class="verdict-body-text">{verdict_text}</p>
             </div>
             """,
@@ -1767,7 +2030,7 @@ with col_prot:
         st.markdown(
             f"""
             <div class="verdict-banner-box verdict-banner-allow">
-              <div class="verdict-title-allow">✅ {dec.value}: SAFE TO PROCEED</div>
+              <div class="verdict-title-allow">✅ ALLOWED: SAFE TO PROCEED</div>
               <p class="verdict-body-text">{verdict_text}</p>
             </div>
             """,
@@ -1783,47 +2046,23 @@ with col_prot:
         )
 
 # ---------------------------------------------------------------------------
-# WHO IT'S FOR
-# ---------------------------------------------------------------------------
-st.markdown("---")
-st.markdown("""<h2 id="who-its-for" class="section-heading">Who It's For</h2>""", unsafe_allow_html=True)
-st.markdown(
-    """
-<div class="strip-container">
-  <div class="strip-card">
-    <div class="strip-card-top">
-      <span class="strip-title">Agent Developers</span>
-    </div>
-    <p class="strip-desc">Build safe AI agents with a single line of defense.</p>
-  </div>
-  <div class="strip-card">
-    <div class="strip-card-top">
-      <span class="strip-title">Security Engineers</span>
-    </div>
-    <p class="strip-desc">Calibrated thresholds, explainable decisions, zero external calls by default.</p>
-  </div>
-  <div class="strip-card">
-    <div class="strip-card-top">
-      <span class="strip-title">Researchers</span>
-    </div>
-    <p class="strip-desc">Reproducible benchmark with 10 attack classes and full ablation data.</p>
-  </div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
-# ---------------------------------------------------------------------------
-# SECTION 2: SCAN YOUR OWN TEXT (Interactive Scanner)
+# SECTION 3: SCAN YOUR OWN TEXT (Master-Detail Workspace)
 # ---------------------------------------------------------------------------
 st.markdown("---")
 st.markdown('<h2 id="scan-your-own-text" class="section-heading">Scan Your Own Text</h2>', unsafe_allow_html=True)
 
-if "scanner_input" not in st.session_state:
-    st.session_state["scanner_input"] = POISONED_EMAIL
-    st.session_state["main_text_area"] = POISONED_EMAIL
-    st.session_state["selected_example_id"] = "hijacked"
-    st.session_state["selected_example_tag"] = "attack"
+if "selected_example_id" not in st.session_state:
+    st.session_state["selected_example_id"] = None
+    st.session_state["selected_example_tag"] = None
+    st.session_state["selected_example_risk"] = None
+    st.session_state["selected_example_tool"] = None
+    st.session_state["selected_example_title"] = None
+    st.session_state["scanner_input"] = ""
+    st.session_state["main_text_area"] = ""
+    st.session_state["custom_scan_result"] = None
+
+if st.session_state.get("toast_msg"):
+    st.toast(st.session_state.pop("toast_msg"))
 
 
 def _select_example(
@@ -1832,6 +2071,7 @@ def _select_example(
     tag: Optional[str] = None,
     risk: RiskLevel = RiskLevel.HIGH,
     tool_name: str = "send email",
+    title: str = "",
 ) -> None:
     st.session_state["scanner_input"] = text
     st.session_state["main_text_area"] = text
@@ -1839,7 +2079,10 @@ def _select_example(
     st.session_state["selected_example_tag"] = tag
     st.session_state["selected_example_risk"] = risk
     st.session_state["selected_example_tool"] = tool_name
+    st.session_state["selected_example_title"] = title
     st.session_state["custom_scan_result"] = None
+    if title:
+        st.session_state["toast_msg"] = f"Loaded: {title}"
 
 
 def _clear_custom_input() -> None:
@@ -1849,7 +2092,45 @@ def _clear_custom_input() -> None:
     st.session_state["selected_example_tag"] = None
     st.session_state["selected_example_risk"] = None
     st.session_state["selected_example_tool"] = None
+    st.session_state["selected_example_title"] = None
     st.session_state["custom_scan_result"] = None
+
+
+def _render_sample_card(ex: dict[str, Any]) -> None:
+    is_selected = st.session_state.get("selected_example_id") == ex["id"]
+    with st.container(key=f"card_{ex['id']}", border=True):
+        pill_class = "ex-pill-attack" if ex["tag"] == "attack" else "ex-pill-normal"
+        selected_tag_html = '<span class="ex-pill-selected">Selected</span>' if is_selected else ""
+        sel_inner_cls = " sample-card-selected" if is_selected else ""
+        st.markdown(
+            f"""
+            <div class="sample-card-inner{sel_inner_cls}">
+              <div class="sample-tag-row">
+                <span class="{pill_class}">{ex['tag']}</span>
+                {selected_tag_html}
+              </div>
+              <div class="sample-card-title" title="{html.escape(ex['title'])}">{ex['title']}</div>
+              <div class="sample-card-desc" title="{html.escape(ex['short_desc'])}">{ex['short_desc']}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.button(
+            "Load sample",
+            key=f"btn_ex_{ex['id']}",
+            icon=":material/arrow_forward:",
+            use_container_width=True,
+            type="primary" if is_selected else "secondary",
+            on_click=_select_example,
+            args=(
+                ex["text"],
+                ex["id"],
+                ex["tag"],
+                ex.get("risk", RiskLevel.HIGH),
+                ex.get("tool", "send email"),
+                ex["title"],
+            ),
+        )
 
 
 def render_result_panel(
@@ -1889,14 +2170,14 @@ def render_result_panel(
         bench_decision = Policy(profile="balanced").decide(suspicion, bench_risk)
         if tag_norm in ("attack", "hijacked"):
             if bench_decision in (Decision.BLOCK, Decision.ASK):
-                gt_badge = '<span style="background:#0F2E1D; color:#22C55E; border:1px solid #22C55E; padding:3px 10px; border-radius:6px; font-weight:700; font-size:14px; margin-left:12px; letter-spacing:0.5px;">✓ CORRECT</span>'
+                gt_badge = '<span class="badge-correct">✓ CORRECT</span>'
             else:
-                gt_badge = '<span style="background:#300E12; color:#F87171; border:1px solid #EF4444; padding:3px 10px; border-radius:6px; font-weight:700; font-size:14px; margin-left:12px; letter-spacing:0.5px;">✗ MISSED ATTACK</span>'
+                gt_badge = '<span class="badge-missed">✗ MISSED ATTACK</span>'
         elif tag_norm in ("normal", "safe"):
             if bench_decision == Decision.ALLOW:
-                gt_badge = '<span style="background:#0F2E1D; color:#22C55E; border:1px solid #22C55E; padding:3px 10px; border-radius:6px; font-weight:700; font-size:14px; margin-left:12px; letter-spacing:0.5px;">✓ CORRECT</span>'
+                gt_badge = '<span class="badge-correct">✓ CORRECT</span>'
             else:
-                gt_badge = '<span style="background:#33260A; color:#F59E0B; border:1px solid #F59E0B; padding:3px 10px; border-radius:6px; font-weight:700; font-size:14px; margin-left:12px; letter-spacing:0.5px;">⚠ FALSE ALARM</span>'
+                gt_badge = '<span class="badge-false-alarm">⚠ FALSE ALARM</span>'
 
     sentence = generate_verdict_sentence(
         decision=decision,
@@ -2019,7 +2300,7 @@ def render_result_panel(
         unsafe_allow_html=True,
     )
 
-    st.markdown("**Same text, different action risk:**")
+    st.markdown("**Same text at low / medium / high risk:**")
     all_dec = trace.decision_by_risk
     dc1, dc2, dc3 = st.columns(3)
     for col, r_lvl in zip([dc1, dc2, dc3], RiskLevel):
@@ -2041,7 +2322,20 @@ def render_result_panel(
                 st.error(f"**{d_val.value}** — Block immediately")
 
     # Policy Thresholds & Decision Details Expander
-    with st.expander("Policy Thresholds & Decision Details", expanded=False):
+    with st.expander("How to read this result", expanded=False):
+        st.markdown(
+            """
+            **Suspicion Score (0% to 100%):**
+            - **0%–34%:** Harmless, everyday workplace requests or clean text.
+            - **35%–74%:** Borderline or ambiguous phrasing requiring deeper evaluation.
+            - **75%–100%:** Blatant prompt injections or system override commands.
+
+            **Action Danger Levels:**
+            - **Low Risk:** Read-only operations (read email, web search). Allowed unless suspicion is high.
+            - **Medium Risk:** Internal modifications (save note, edit draft). Asks for confirmation on borderline inputs.
+            - **High Risk:** External or privileged actions (send email, delete records, pay). Blocks immediately on moderate-to-high suspicion.
+            """
+        )
         st.markdown(f"**Active Profile:** `{profile.capitalize()}` — {PROFILE_HELP.get(profile, 'Calibrated thresholds')}")
         pol_obj = Policy(profile=profile)
         table_rows = []
@@ -2060,7 +2354,7 @@ def render_result_panel(
     import json
     trace_json = json.dumps(trace.to_dict(), indent=2)
     st.download_button(
-        label="Download Scan Trace (JSON)",
+        label="Download result (JSON)",
         data=trace_json,
         file_name="firewall_scan_trace.json",
         mime="application/json",
@@ -2084,240 +2378,207 @@ cascade_engine = get_cascade(
     is_live_ollama=ollama_available,
 )
 
-# Sub-part: Try an Example
-st.subheader("Try an Example")
-st.caption("Click either button to see an instant precomputed demonstration:")
+with st.container(key="workspace_container"):
+    # Samples container (LEFT top on desktop >= 1100px, #1 on mobile < 1100px)
+    with st.container(key="workspace_samples"):
+        st.subheader("Pick a sample or paste your own")
+        st.caption("8 real benchmark attacks and tricky normal samples tested on Ollama `llama3.2:3b`:")
 
-try_col1, try_col2 = st.columns(2)
-with try_col1:
+        # 2-column mini grid for the 8 samples
+        for row_idx in range(0, len(EXAMPLES), 2):
+            g_col1, g_col2 = st.columns(2)
+            with g_col1:
+                _render_sample_card(EXAMPLES[row_idx])
+            with g_col2:
+                if row_idx + 1 < len(EXAMPLES):
+                    _render_sample_card(EXAMPLES[row_idx + 1])
 
-    is_hijacked = st.session_state.get("selected_example_id") == "hijacked"
-    st.button(
-        "Hijacked Email (Attack)",
-        key="btn_try_hijacked",
-        icon=":material/warning:",
-        use_container_width=True,
-        type="primary" if is_hijacked else "secondary",
-        on_click=_select_example,
-        args=(POISONED_EMAIL, "hijacked", "attack", RiskLevel.HIGH, "send email"),
-    )
+    # Result Panel container (RIGHT on desktop >= 1100px, #2 on mobile < 1100px directly under samples!)
+    with st.container(key="workspace_result"):
+        st.subheader("Analysis Result")
+        result_placeholder = st.empty()
 
-with try_col2:
-    is_normal = st.session_state.get("selected_example_id") == "normal"
-    st.button(
-        "Normal Email (Safe)",
-        key="btn_try_normal",
-        icon=":material/check_circle:",
-        use_container_width=True,
-        type="primary" if is_normal else "secondary",
-        on_click=_select_example,
-        args=(NORMAL_EMAIL, "normal", "normal", RiskLevel.MEDIUM, "save note"),
-    )
+    # Custom Form container (LEFT bottom on desktop >= 1100px, #3 on mobile < 1100px)
+    with st.container(key="workspace_custom"):
+        col_custom_title, col_clear = st.columns([4, 1])
+        with col_custom_title:
+            st.markdown("### Or Enter Custom Text")
+        with col_clear:
+            st.write("")
+            st.button("Clear", key="btn_clear_input", on_click=_clear_custom_input, use_container_width=True)
 
-st.markdown("---")
+        with st.form("custom_scan_form", clear_on_submit=False):
+            user_text = st.text_area(
+                "Content to analyze (untrusted user input, email body, search snippet, or document):",
+                height=130,
+                key="main_text_area",
+            )
 
-# Sub-part: Benchmark Samples Cards
-st.subheader("Or Pick a Benchmark Sample")
-st.caption("8 real attack and tricky normal patterns tested on Ollama `llama3.2:3b`:")
-
-ex_rows = [EXAMPLES[:4], EXAMPLES[4:]]
-for row in ex_rows:
-    cols = st.columns(4)
-    for i, ex in enumerate(row):
-        with cols[i]:
-            with st.container(border=True):
-                pill_class = "ex-pill-attack" if ex["tag"] == "attack" else "ex-pill-normal"
-                is_selected = st.session_state.get("selected_example_id") == ex["id"]
-                sel_cls = " ex-card-selected" if is_selected else ""
-                st.markdown(
-                    f"""
-                    <div class="ex-card-content{sel_cls}">
-                      <div class="ex-card-tag-row"><span class="{pill_class}">{ex['tag']}</span></div>
-                      <div class="ex-card-title">{ex['title']}</div>
-                      <div class="ex-card-desc">{ex['short_desc']}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
+            col_tool, col_prof, col_run = st.columns([2, 1, 1])
+            with col_tool:
+                tool_risk_choice = st.selectbox(
+                    "Action the AI is trying to perform:",
+                    [
+                        "Send Email or Transfer Funds (High Risk)",
+                        "Save Note or Update Draft (Medium Risk)",
+                        "Read Search Results or Local Document (Low Risk)",
+                    ],
+                    index=0,
+                    key="custom_action_risk",
+                    help="High-risk actions can leak secrets or modify data. Low-risk actions cannot cause external damage.",
                 )
-                st.button(
-                    "Load example",
-                    key=f"btn_ex_{ex['id']}",
-                    icon=":material/arrow_forward:",
+                if "High" in tool_risk_choice:
+                    eval_risk = RiskLevel.HIGH
+                    eval_tool_name = "send email"
+                elif "Medium" in tool_risk_choice:
+                    eval_risk = RiskLevel.MEDIUM
+                    eval_tool_name = "save note"
+                else:
+                    eval_risk = RiskLevel.LOW
+                    eval_tool_name = "read data"
+
+            with col_prof:
+                form_profile = st.selectbox(
+                    "Policy Profile:",
+                    ["balanced", "strict", "lenient"],
+                    index=0,
+                    key="custom_profile_select",
+                    help="Thresholds for ALLOW, ASK, and BLOCK across tool danger levels.",
+                )
+
+            with col_run:
+                st.write("")
+                st.write("")
+                run_scan = st.form_submit_button(
+                    "Scan with AgentFirewall",
+                    icon=":material/shield:",
+                    type="primary",
                     use_container_width=True,
-                    on_click=_select_example,
-                    args=(ex["text"], ex["id"], ex["tag"], ex.get("risk", RiskLevel.HIGH), ex.get("tool", "send email")),
                 )
 
-# Result Panel directly under example buttons & benchmark grid
-active_result = None
-if st.session_state.get("selected_example_id"):
-    st.markdown("#### Example Analysis Result")
-    ex_id = st.session_state.get("selected_example_id")
-    ex_tag = st.session_state.get("selected_example_tag")
-    ex_risk = st.session_state.get("selected_example_risk", RiskLevel.HIGH)
-    ex_tool = st.session_state.get("selected_example_tool", "send email")
-    ex_text = st.session_state.get("scanner_input", "")
-    active_result = render_result_panel(
-        text=ex_text,
-        risk=ex_risk,
-        tool_name=ex_tool,
-        benchmark_tag=ex_tag,
-        example_id=ex_id,
-        example_risk=ex_risk,
-        cascade_engine=cascade_engine,
-        profile=adv_profile,
-        is_live_ollama=ollama_available and adv_judge == "ollama (live)",
-    )
-
-st.markdown("---")
-
-# Sub-part: Custom Text & Tool Risk
-col_custom_title, col_clear = st.columns([5, 1])
-with col_custom_title:
-    st.subheader("Enter Your Own Text")
-with col_clear:
-    st.write("")
-    st.button("Clear", key="btn_clear_input", on_click=_clear_custom_input, use_container_width=True)
-
-with st.form("custom_scan_form", clear_on_submit=False):
-    user_text = st.text_area(
-        "Content to analyze (untrusted user input, email body, search snippet, or document):",
-        height=130,
-        key="main_text_area",
-    )
-
-    col_tool, col_prof, col_run = st.columns([2, 1, 1])
-    with col_tool:
-        tool_risk_choice = st.selectbox(
-            "Action the AI is trying to perform:",
-            [
-                "Send Email or Transfer Funds (High Risk)",
-                "Save Note or Update Draft (Medium Risk)",
-                "Read Search Results or Local Document (Low Risk)",
-            ],
-            index=0,
-            key="custom_action_risk",
-            help="High-risk actions can leak secrets or modify data. Low-risk actions cannot cause external damage.",
-        )
-        if "High" in tool_risk_choice:
-            eval_risk = RiskLevel.HIGH
-            eval_tool_name = "send email"
-        elif "Medium" in tool_risk_choice:
-            eval_risk = RiskLevel.MEDIUM
-            eval_tool_name = "save note"
-        else:
-            eval_risk = RiskLevel.LOW
-            eval_tool_name = "read data"
-
-    with col_prof:
-        form_profile = st.selectbox(
-            "Policy Profile:",
-            ["balanced", "strict", "lenient"],
-            index=0,
-            key="custom_profile_select",
-            help="Thresholds for ALLOW, ASK, and BLOCK across tool danger levels.",
-        )
-
-    with col_run:
-        st.write("")
-        st.write("")
-        run_scan = st.form_submit_button("Scan with AgentFirewall", icon=":material/shield:", type="primary", use_container_width=True)
-
-if run_scan:
-    st.session_state["selected_example_id"] = None
-    st.session_state["selected_example_tag"] = None
-    if not user_text.strip():
-        st.warning("Please enter some text to scan.")
-        st.session_state["custom_scan_result"] = None
-    else:
-        with st.spinner("Scanning with AgentFirewall..."):
-            key = hashlib.sha256(user_text.strip().encode("utf-8")).hexdigest()[:16]
-            is_bench = key in _PRECOMPUTED_MAP
-            if is_bench:
-                custom_engine = cascade_engine
-            elif ollama_available and adv_judge == "ollama (live)":
-                custom_engine = get_cascade(
-                    judge_name="ollama",
-                    combine=adv_combine,
-                    with_clf=adv_clf,
-                    profile=form_profile,
-                    is_live_ollama=True,
-                )
+        if run_scan:
+            st.session_state["selected_example_id"] = None
+            st.session_state["selected_example_tag"] = None
+            if not user_text.strip():
+                st.warning("Please enter some text to scan.")
+                st.session_state["custom_scan_result"] = None
             else:
-                # Custom text without reachable live ollama: run with NO judge at all (rules + classifier only)
-                custom_engine = get_cascade(
-                    judge_name="none",
-                    combine=adv_combine,
-                    with_clf=adv_clf,
-                    profile=form_profile,
-                    is_live_ollama=False,
+                with st.spinner("Scanning with AgentFirewall..."):
+                    key = hashlib.sha256(user_text.strip().encode("utf-8")).hexdigest()[:16]
+                    is_bench = key in _PRECOMPUTED_MAP
+                    if is_bench:
+                        custom_engine = cascade_engine
+                    elif ollama_available and adv_judge == "ollama (live)":
+                        custom_engine = get_cascade(
+                            judge_name="ollama",
+                            combine=adv_combine,
+                            with_clf=adv_clf,
+                            profile=form_profile,
+                            is_live_ollama=True,
+                        )
+                    else:
+                        custom_engine = get_cascade(
+                            judge_name="none",
+                            combine=adv_combine,
+                            with_clf=adv_clf,
+                            profile=form_profile,
+                            is_live_ollama=False,
+                        )
+
+                    st.session_state["custom_scan_result"] = {
+                        "text": user_text,
+                        "risk": eval_risk,
+                        "tool_name": eval_tool_name,
+                        "engine": custom_engine,
+                        "profile": form_profile,
+                    }
+
+        with st.expander("Advanced Settings (Judge, Combine Mode, Policy Profile)", expanded=False, icon=":material/tune:"):
+            st.caption("Fine-tune firewall parameters. Defaults provide safe, calibrated protection.")
+            adv_col1, adv_col2, adv_col3 = st.columns(3)
+
+            with adv_col1:
+                if ollama_available:
+                    judge_opts = ["precomputed", "ollama (live)", "none", "mock"]
+                else:
+                    judge_opts = ["precomputed", "none", "mock", "openai"]
+                selected_judge = st.selectbox(
+                    "Judge Engine",
+                    judge_opts,
+                    index=0,
+                    key="adv_judge_select",
+                    help="Layer 3 LLM judge. In cloud demo mode, benchmark samples use real precomputed llama3.2:3b verdicts.",
                 )
 
-            st.session_state["custom_scan_result"] = {
-                "text": user_text,
-                "risk": eval_risk,
-                "tool_name": eval_tool_name,
-                "engine": custom_engine,
-                "profile": form_profile,
-            }
+            with adv_col2:
+                selected_combine = st.selectbox(
+                    "Combine Mode",
+                    ["gated", "max", "blend", "verify"],
+                    index=0,
+                    key="adv_combine_select",
+                    help=(
+                        "gated: fast rules/ML first; calls judge only in uncertain band [0.35, 0.75]. "
+                        "max: judge can only raise suspicion. blend: weighted average. verify: judge can lower."
+                    ),
+                )
 
-if st.session_state.get("custom_scan_result"):
-    st.markdown("#### Custom Scan Result")
-    csr = st.session_state["custom_scan_result"]
-    active_result = render_result_panel(
-        text=csr["text"],
-        risk=csr["risk"],
-        tool_name=csr["tool_name"],
-        benchmark_tag=None,
-        example_id=None,
-        example_risk=csr["risk"],
-        cascade_engine=csr.get("engine", cascade_engine),
-        profile=csr.get("profile", adv_profile),
-        is_live_ollama=ollama_available and adv_judge == "ollama (live)",
-    )
+            with adv_col3:
+                selected_profile = st.selectbox(
+                    "Policy Profile",
+                    ["balanced", "strict", "lenient"],
+                    index=0,
+                    key="adv_profile_select",
+                    help="Thresholds for ALLOW, ASK, and BLOCK across tool danger levels.",
+                )
 
-# Collapsed "Advanced Settings" Expander
-with st.expander("Advanced Settings (Judge, Combine Mode, Policy Profile)", expanded=False, icon=":material/tune:"):
-    st.caption("Fine-tune firewall parameters. Defaults provide safe, calibrated protection.")
-    adv_col1, adv_col2, adv_col3 = st.columns(3)
+            clf_enabled = st.checkbox("Enable ML Classifier Layer", value=True, key="adv_clf_enable")
 
-    with adv_col1:
-        if ollama_available:
-            judge_opts = ["precomputed", "ollama (live)", "none", "mock"]
+    # Render into the result_placeholder
+    with result_placeholder.container():
+        active_result = None
+        if st.session_state.get("selected_example_id"):
+            ex_id = st.session_state.get("selected_example_id")
+            ex_tag = st.session_state.get("selected_example_tag")
+            ex_risk = st.session_state.get("selected_example_risk", RiskLevel.HIGH)
+            ex_tool = st.session_state.get("selected_example_tool", "send email")
+            ex_text = st.session_state.get("scanner_input", "")
+            active_result = render_result_panel(
+                text=ex_text,
+                risk=ex_risk,
+                tool_name=ex_tool,
+                benchmark_tag=ex_tag,
+                example_id=ex_id,
+                example_risk=ex_risk,
+                cascade_engine=cascade_engine,
+                profile=adv_profile,
+                is_live_ollama=ollama_available and adv_judge == "ollama (live)",
+            )
+        elif st.session_state.get("custom_scan_result"):
+            csr = st.session_state["custom_scan_result"]
+            active_result = render_result_panel(
+                text=csr["text"],
+                risk=csr["risk"],
+                tool_name=csr["tool_name"],
+                benchmark_tag=None,
+                example_id=None,
+                example_risk=csr["risk"],
+                cascade_engine=csr.get("engine", cascade_engine),
+                profile=csr.get("profile", adv_profile),
+                is_live_ollama=ollama_available and adv_judge == "ollama (live)",
+            )
         else:
-            judge_opts = ["precomputed", "none", "mock", "openai"]
-        selected_judge = st.selectbox(
-            "Judge Engine",
-            judge_opts,
-            index=0,
-            key="adv_judge_select",
-            help="Layer 3 LLM judge. In cloud demo mode, benchmark samples use real precomputed llama3.2:3b verdicts.",
-        )
+            st.markdown(
+                """
+                <div class="empty-state-card">
+                  <div class="empty-state-icon">🛡️</div>
+                  <div class="empty-state-title">Pick a sample or paste text and press Scan</div>
+                  <p class="empty-state-desc">Select any of the 8 benchmark samples on the left or enter your own text to inspect real-time multi-layer detection results.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-    with adv_col2:
-        selected_combine = st.selectbox(
-            "Combine Mode",
-            ["gated", "max", "blend", "verify"],
-            index=0,
-            key="adv_combine_select",
-            help=(
-                "gated: fast rules/ML first; calls judge only in uncertain band [0.35, 0.75]. "
-                "max: judge can only raise suspicion. blend: weighted average. verify: judge can lower."
-            ),
-        )
-
-    with adv_col3:
-        selected_profile = st.selectbox(
-            "Policy Profile",
-            ["balanced", "strict", "lenient"],
-            index=0,
-            key="adv_profile_select",
-            help="Thresholds for ALLOW, ASK, and BLOCK across tool danger levels.",
-        )
-
-    clf_enabled = st.checkbox("Enable ML Classifier Layer", value=True, key="adv_clf_enable")
-
-result = active_result if active_result is not None else cascade_engine.evaluate(st.session_state.get("scanner_input", POISONED_EMAIL))
+result = active_result if active_result is not None else cascade_engine.evaluate(POISONED_EMAIL)
 policy_instance = Policy(profile=adv_profile)
 
 # ---------------------------------------------------------------------------

@@ -8,21 +8,18 @@ plain-data ``Trace`` dataclass ready for the UI to render.
 from __future__ import annotations
 
 import hashlib
-import time
 import urllib.request
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Any, Optional
 
 from agent_firewall.cascade import Cascade, CascadeResult
 from agent_firewall.judge import BaseJudge, JudgeResult, make_judge
 from agent_firewall.policy import (
-    PROFILES,
     Decision,
     Policy,
     RiskLevel,
     Thresholds,
 )
-from agent_firewall.rules import RULES
 
 # ---------------------------------------------------------------------------
 # Friendly rule labels (covers every rule in agent_firewall.rules.RULES)
