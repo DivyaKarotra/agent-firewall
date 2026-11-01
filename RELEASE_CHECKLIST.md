@@ -82,8 +82,6 @@ huggingface-cli repo create agent-firewall-benchmark --type dataset
 huggingface-cli upload DivyaKarotra/agent-firewall-benchmark hf_dataset . --repo-type dataset
 ```
 
----
-
 ## 5. Publish Social Announcements & Technical Posts
 
 1. **Blog Post**:
@@ -96,3 +94,24 @@ huggingface-cli upload DivyaKarotra/agent-firewall-benchmark hf_dataset . --repo
    - Review [publish/resume_bullets.md](publish/resume_bullets.md) and integrate matching bullet points into your CV.
 4. **Interview Preparation**:
    - Reference [publish/interview_qa.md](publish/interview_qa.md) for technical discussions and architecture walkthroughs.
+
+---
+
+## 6. Keeping the Demo Awake
+
+The public Streamlit Community Cloud demo (`https://agent-firewall.streamlit.app/`) automatically goes to sleep after ~12 hours of inactivity.
+
+A dedicated GitHub Actions workflow [keep-awake.yml](.github/workflows/keep-awake.yml) prevents dormancy:
+
+1. **How It Works**:
+   - Runs every 6 hours (`cron: "17 */6 * * *"`) using headless Chromium (Playwright).
+   - Opens `https://agent-firewall.streamlit.app/`.
+   - If Streamlit shows the wake-up button (`"Yes, get this app back up!"`), clicks it and logs `"App was asleep; woke it"`. Otherwise logs `"App already awake"`.
+   - Waits up to 120 seconds for the app text `"AgentFirewall"` to render, remains on the page for ~20 seconds to establish an active session, and logs `"OK: app content loaded"`.
+2. **Default Branch Requirement**:
+   - GitHub Actions scheduled cron workflows run **only** from the repository's default branch (`main`).
+3. **60-Day Inactivity Rule**:
+   - GitHub automatically disables scheduled workflows on public repositories after 60 days of repository inactivity (no commits). A commit or push to the repository re-enables them.
+4. **Manual Dispatch**:
+   - The workflow can be triggered manually at any time from the **Actions** tab $\rightarrow$ **Keep demo awake** $\rightarrow$ **Run workflow**.
+

@@ -1,0 +1,80 @@
+name: "Keep demo awake"
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+env:
+  APP_URL: "https://agent-firewall.streamlit.app/"
+
+permissions:
+  contents: read
+
+jobs:
+  visit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Visit app and keep awake
+        run: |
+          python - << 'EOF'
+          import os
+          import sys
+          import time
+          from playwright.sync_api import sync_playwright
+
+          app_url = os.environ.get("APP_URL", "https://agent-firewall.streamlit.app/")
+          print(f"Navigating to {app_url}...")
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              context = browser.new_context()
+              page = context.new_page()
+
+              try:
+                  page.goto(app_url, wait_until="domcontentloaded", timeout=120000)
+              except Exception as e:
+                  print(f"Initial navigation exception: {e}")
+
+              # Check if the Streamlit sleep page button is visible
+              wake_button = page.get_by_role("button", name="Yes, get this app back up!")
+              try:
+                  if wake_button.is_visible(timeout=5000):
+                      wake_button.click()
+                      print("App was asleep; woke it")
+                  else:
+                      print("App already awake")
+              except Exception:
+                  print("App already awake")
+
+              # Wait up to 120s for the app content ("AgentFirewall")
+              content_loaded = False
+              try:
+                  page.get_by_text("AgentFirewall").first.wait_for(timeout=120000)
+                  content_loaded = True
+              except Exception as e:
+                  print(f"Wait for content timed out: {e}")
+
+              # Stay about 20s to register session
+              time.sleep(20)
+
+              if content_loaded:
+                  print("OK: app content loaded")
+              else:
+                  print(f"WARNING: content never loaded. Current title: '{page.title()}'")
+                  browser.close()
+                  sys.exit(1)
+
+              browser.close()
+          EOF
