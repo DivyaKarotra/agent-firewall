@@ -322,6 +322,7 @@ def test_nav_labels_equal_section_heading_texts():
     content = app_path.read_text(encoding="utf-8")
     expected_nav = [
         ("Live Demo", "live-demo"),
+        ("Who It's For", "who-its-for"),
         ("Scan Your Own Text", "scan-your-own-text"),
         ("How It Works", "how-it-works"),
         ("Why Layers?", "why-layers"),
