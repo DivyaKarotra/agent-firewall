@@ -10,9 +10,11 @@ from agent_firewall.policy import Decision, RiskLevel
 from dashboard.engine import (
     build_cascade,
     build_precomputed_map,
+    build_trace_export,
     generate_verdict_sentence,
     get_friendly_rule_label,
     get_honest_note,
+    read_benchmark_results,
     scan,
 )
 from dashboard.examples import DEMO_EMAILS, EXAMPLES, NORMAL_EMAIL, POISONED_EMAIL
@@ -112,3 +114,32 @@ def test_scan_normal_email(cascade_obj, precomputed_map):
     assert trace.decision == Decision.ALLOW
     assert trace.rules_score == 0.0
     assert trace.combined_suspicion == 0.0
+
+
+def test_read_benchmark_results():
+    stats = read_benchmark_results()
+    assert "rules_classifier_catch" in stats
+    assert "full_cascade_catch" in stats
+    assert "sample_count" in stats
+    assert isinstance(stats["sample_count"], int)
+    assert stats["sample_count"] > 0
+
+
+def test_build_trace_export(cascade_obj, precomputed_map):
+    import json
+
+    trace = scan(
+        text=POISONED_EMAIL,
+        tool_risk=RiskLevel.HIGH,
+        profile="balanced",
+        judge_mode="precomputed",
+        cascade=cascade_obj,
+        precomputed_map=precomputed_map,
+    )
+    json_str = build_trace_export(trace)
+    data = json.loads(json_str)
+    assert data["decision"] in ("BLOCK", "ASK")
+    assert data["tool_risk"] == "high"
+    assert "combined_suspicion" in data
+    assert "rules_score" in data
+

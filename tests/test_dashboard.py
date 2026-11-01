@@ -491,5 +491,33 @@ def test_dashboard_benchmark_definition_counts():
     assert false_alarm_count == 0, f"Expected 0 FALSE ALARM, got {false_alarm_count}"
 
 
+def test_dashboard_json_download_parses():
+    """Verify that clicking a sample produces a valid, parsable JSON download payload."""
+    import json
+
+    app_path = Path(__file__).parent.parent / "dashboard" / "app.py"
+    at = AppTest.from_file(str(app_path), default_timeout=60)
+    at.run()
+    assert len(at.exception) == 0
+
+    at.button(key="btn_ex_a001").click().run()
+    assert len(at.exception) == 0
+    assert len(at.download_button) > 0, "Download button not found after loading sample"
+
+    dl_btn = at.download_button[0]
+    assert dl_btn.label == "Download result (JSON)"
+    assert "last_trace_json" in at.session_state
+    raw_data = at.session_state["last_trace_json"]
+    parsed = json.loads(raw_data)
+    assert isinstance(parsed, dict)
+    assert parsed["decision"] in ("BLOCK", "ASK", "ALLOW")
+    assert "combined_suspicion" in parsed
+    assert "rules_score" in parsed
+    assert "thresholds" in parsed
+    assert "decision_by_risk" in parsed
+
+
+
+
 
 
