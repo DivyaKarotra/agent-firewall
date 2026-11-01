@@ -1174,11 +1174,16 @@ div[class*="st-key-card_"] div[data-testid="stButton"] button {
 
 /* Empty State Card */
 .empty-state-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  min-height: 420px;
   padding: 48px 32px;
   background: #172042;
   border: 1px dashed #263261;
   border-radius: 16px;
-  text-align: center;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   margin-top: 12px;
 }
@@ -1199,9 +1204,10 @@ div[class*="st-key-card_"] div[data-testid="stButton"] button {
 .empty-state-desc {
   font-size: 15px !important;
   color: #A9B3D1;
-  max-width: 440px;
-  margin: 0 auto;
+  max-width: 460px !important;
+  margin: 0.5rem auto 0 !important;
   line-height: 1.55;
+  text-align: center !important;
 }
 
 /* Ground Truth Badges */
