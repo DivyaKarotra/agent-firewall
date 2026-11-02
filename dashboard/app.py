@@ -422,6 +422,7 @@ if "selected_example_id" not in st.session_state:
     st.session_state["scanner_input"] = ""
     st.session_state["main_text_area"] = ""
     st.session_state["custom_scan_result"] = None
+    st.session_state["scan_scroll_counter"] = 0
 
 if st.session_state.get("toast_msg"):
     st.toast(st.session_state.pop("toast_msg"))
@@ -443,6 +444,7 @@ def _select_example(
     st.session_state["selected_example_tool"] = tool_name
     st.session_state["selected_example_title"] = title
     st.session_state["custom_scan_result"] = None
+    st.session_state["scan_scroll_counter"] = st.session_state.get("scan_scroll_counter", 0) + 1
     if title:
         st.session_state["toast_msg"] = f"Loaded: {title}"
 
@@ -702,6 +704,7 @@ with st.container(key="workspace_container"):
 
     # Result Panel container (RIGHT on desktop >= 1100px, #2 on mobile < 1100px directly under samples)
     with st.container(key="workspace_result"):
+        st.markdown('<div id="scan-result-anchor"></div>', unsafe_allow_html=True)
         st.subheader("Analysis Result")
         result_placeholder = st.empty()
 
@@ -799,6 +802,7 @@ with st.container(key="workspace_container"):
                         "engine": custom_engine,
                         "profile": form_profile,
                     }
+                    st.session_state["scan_scroll_counter"] = st.session_state.get("scan_scroll_counter", 0) + 1
 
         with st.expander("Advanced Settings (Judge, Combine Mode, Policy Profile)", expanded=False, icon=":material/tune:"):
             st.caption("Fine-tune firewall parameters. Defaults provide safe, calibrated protection.")
@@ -885,7 +889,27 @@ with st.container(key="workspace_container"):
                 unsafe_allow_html=True,
             )
 
+# Fire scroll-to-result once per click (counter incremented in callback / run_scan)
+_scroll_counter = st.session_state.get("scan_scroll_counter", 0)
+if _scroll_counter > 0:
+    components.html(
+        f"""
+<script>
+(function(){{
+  var _cnt = {_scroll_counter};  // changes each click, so this script re-runs
+  setTimeout(function() {{
+    var el = window.parent.document.getElementById('scan-result-anchor');
+    if (el) {{ el.scrollIntoView({{behavior: 'smooth', block: 'start'}}); }}
+  }}, 150);
+}})();
+</script>
+""",
+        height=0,
+        width=0,
+    )
+
 result = active_result if active_result is not None else cascade_engine.evaluate(POISONED_EMAIL)
+
 policy_instance = Policy(profile=adv_profile)
 
 # ---------------------------------------------------------------------------

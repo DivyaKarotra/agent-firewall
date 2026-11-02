@@ -1543,6 +1543,40 @@ div[data-testid="stExpander"] details summary {
     width: 100%;
   }
 }
+
+/* -----------------------------------------------------------------------
+ * Toast styling – make it stand out from the dark navy cards
+ * ----------------------------------------------------------------------- */
+[data-testid="stToast"] {
+  background: #1E2A5A !important;
+  border: 1px solid #22D3EE !important;
+  border-left: 4px solid #22D3EE !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,211,238,0.25) !important;
+  color: #E8ECF8 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+[data-testid="stToast"] p,
+[data-testid="stToast"] span,
+[data-testid="stToast"] div {
+  color: #E8ECF8 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+[data-testid="stToast"] button,
+[data-testid="stToast"] [data-testid="stToastCloseButton"],
+[data-testid="stToast"] svg {
+  color: #A9B3D1 !important;
+  fill: #A9B3D1 !important;
+}
+
+/* Scroll anchor for the result panel – offset for fixed header */
+#scan-result-anchor {
+  scroll-margin-top: 100px !important;
+}
 </style>
 """
 
