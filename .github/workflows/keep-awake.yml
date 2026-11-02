@@ -58,21 +58,39 @@ jobs:
               except Exception:
                   print("App already awake")
 
-              # Wait up to 120s for the app content ("AgentFirewall")
-              content_loaded = False
-              try:
-                  page.get_by_text("AgentFirewall").first.wait_for(timeout=120000)
-                  content_loaded = True
-              except Exception as e:
-                  print(f"Wait for content timed out: {e}")
+              def _check_iframe_content():
+                  """Wait for the Streamlit iframe then look for app text inside it."""
+                  # Streamlit Community Cloud renders the app inside an iframe
+                  page.wait_for_selector('iframe[title="streamlitApp"]', timeout=120000)
+                  frame = page.frame_locator('iframe[title="streamlitApp"]')
+                  frame.get_by_text("AgentFirewall").first.wait_for(timeout=120000)
 
-              # Stay about 20s to register session
+              # Wait up to 120 s for the Streamlit iframe and its content.
+              # If the wake button was just clicked the app may still be restarting,
+              # so retry once if the first attempt fails.
+              content_loaded = False
+              for attempt in (1, 2):
+                  try:
+                      _check_iframe_content()
+                      content_loaded = True
+                      break
+                  except Exception as e:
+                      print(f"Attempt {attempt}: iframe content check failed: {e}")
+                      if attempt == 1:
+                          print("Retrying after 5 s (app may still be restarting)...")
+                          time.sleep(5)
+
+              # Stay about 20 s to let the WebSocket session register
               time.sleep(20)
 
               if content_loaded:
-                  print("OK: app content loaded")
+                  print("OK: app content loaded inside Streamlit iframe")
               else:
-                  print(f"WARNING: content never loaded. Current title: '{page.title()}'")
+                  print(
+                      f"WARNING: content never loaded. "
+                      f"Current title: '{page.title()}' | "
+                      f"Body excerpt: {page.inner_text('body')[:300]!r}"
+                  )
                   browser.close()
                   sys.exit(1)
 
