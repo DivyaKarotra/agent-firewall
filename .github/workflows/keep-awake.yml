@@ -47,31 +47,43 @@ jobs:
               except Exception as e:
                   print(f"Initial navigation exception: {e}")
 
-              # Check if the Streamlit sleep page button is visible
-              wake_button = page.get_by_role("button", name="Yes, get this app back up!")
-              try:
-                  if wake_button.is_visible(timeout=5000):
-                      wake_button.click()
-                      print("App was asleep; woke it")
-                  else:
-                      print("App already awake")
-              except Exception:
-                  print("App already awake")
-
-              def _check_iframe_content():
+              def _check_iframe_content(iframe_timeout=120000):
                   """Wait for the Streamlit iframe then look for app text inside it."""
                   # Streamlit Community Cloud renders the app inside an iframe
-                  page.wait_for_selector('iframe[title="streamlitApp"]', timeout=120000)
+                  page.wait_for_selector('iframe[title="streamlitApp"]', timeout=iframe_timeout)
                   frame = page.frame_locator('iframe[title="streamlitApp"]')
                   frame.get_by_text("AgentFirewall").first.wait_for(timeout=120000)
 
-              # Wait up to 120 s for the Streamlit iframe and its content.
+              # Wait for the Streamlit iframe and its content.
               # If the wake button was just clicked the app may still be restarting,
               # so retry once if the first attempt fails.
               content_loaded = False
               for attempt in (1, 2):
                   try:
-                      _check_iframe_content()
+                      # Wait until EITHER the app iframe OR the wake button is present, up to 90 s
+                      start = time.time()
+                      state = None
+                      while time.time() - start < 90:
+                          if page.locator('iframe[title="streamlitApp"]').count() > 0:
+                              state = "awake"
+                              break
+                          elif page.get_by_role("button", name="Yes, get this app back up!").count() > 0:
+                              state = "asleep"
+                              break
+                          time.sleep(1)
+
+                      if state == "asleep":
+                          wake_button = page.get_by_role("button", name="Yes, get this app back up!")
+                          wake_button.wait_for(state="visible", timeout=10000)
+                          wake_button.click()
+                          print("App was asleep; woke it")
+                          _check_iframe_content(iframe_timeout=180000)
+                      elif state == "awake":
+                          print("App already awake")
+                          _check_iframe_content(iframe_timeout=120000)
+                      else:
+                          raise TimeoutError("Timed out waiting 90 s for iframe or wake button")
+
                       content_loaded = True
                       break
                   except Exception as e:
